@@ -1,0 +1,266 @@
+/* ═══════════════════════════════════════════════════════════
+   WEDDING SITE — SHARED STYLES
+   Used by: index.html, hotels.html (and any future pages)
+═══════════════════════════════════════════════════════════ */
+
+/* ── FONTS ────────────────────────────────────────────────── */
+/* Include these <link> tags in every page's <head>:
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display+SC:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
+*/
+
+/* ── RESET ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── VARIABLES ────────────────────────────────────────────── */
+:root {
+  --red:        #FF3D41;
+  --red-dark:   #C0272A;
+  --red-deep:   #8B1A1C;
+  --ivory:      #FAF6F0;
+  --ivory-dark: #F0E8DC;
+  --text-dark:  #2A1A1A;
+  --text-mid:   #5C3A3A;
+  --gold:       #C9A84C;
+}
+
+/* ── BASE ─────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--ivory);
+  color: var(--text-dark);
+  overflow-x: hidden;
+}
+
+/* ── FONT UTILITY CLASSES ─────────────────────────────────── */
+.fancy  { font-family: 'Cormorant Garamond', serif; }
+.script { font-family: 'Alex Brush', cursive; }
+.caps   { font-family: 'Playfair Display SC', serif; }
+
+/* ── SECTION WRAPPERS ─────────────────────────────────────── */
+.section-bg-ivory      { background: var(--ivory); }
+.section-bg-ivory-dark { background: var(--ivory-dark); }
+.section-bg-dark       { background: linear-gradient(160deg, #1a0505 0%, #3a0a0a 100%); }
+
+/* ── SECTIONS ─────────────────────────────────────────────── */
+.section {
+  padding: clamp(3rem, 8vw, 5rem) clamp(1.5rem, 5vw, 3rem);
+  max-width: 800px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.section.in-view { opacity: 1; transform: none; }
+
+.section-title {
+  font-family: 'Alex Brush', cursive;
+  font-size: clamp(2.5rem, 7vw, 3.8rem);
+  font-weight: 400;
+  color: var(--red-dark);
+  text-align: center;
+  margin-bottom: 0.4rem;
+}
+.section-sub {
+  text-align: center;
+  font-family: 'Playfair Display SC', serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  color: var(--text-mid);
+  margin-bottom: 2.5rem;
+  opacity: 0.8;
+}
+
+/* ── SEPARATOR ────────────────────────────────────────────── */
+.section-sep {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 auto 3rem;
+  max-width: 500px;
+  padding: 0 2rem;
+}
+.sep-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--red), transparent);
+  opacity: 0.4;
+}
+.sep-img {
+  width: 60px;
+  height: 60px;
+  background: url('../img/rose-icon-red.png') center/contain no-repeat;
+}
+
+/* ── BUTTONS ──────────────────────────────────────────────── */
+.btn-primary {
+  display: block;
+  font-family: 'Playfair Display SC', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  background: var(--red-dark);
+  border: none;
+  padding: 0.9rem 2.5rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.25s, transform 0.2s;
+  width: fit-content;
+  margin: 0 auto;
+}
+.btn-primary:hover { background: var(--red-deep); transform: translateY(-2px); }
+.btn-primary:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* ── PAGE HEADER (secondary pages e.g. hotels.html) ──────── */
+.page-header {
+  background: linear-gradient(160deg, #1a0505 0%, #3a0a0a 100%);
+  padding: clamp(3rem, 10vw, 5rem) 2rem clamp(2rem, 6vw, 3.5rem);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.page-header::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(201,168,76,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.page-header-eyebrow {
+  font-family: 'Playfair Display SC', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+.page-header-title {
+  font-family: 'Alex Brush', cursive;
+  font-size: clamp(2.8rem, 8vw, 4.5rem);
+  color: var(--ivory);
+  line-height: 1;
+}
+.page-header-divider {
+  width: 60px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  margin: 1.2rem auto 0.8rem;
+}
+.page-header-sub {
+  font-family: 'Playfair Display SC', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.25em;
+  color: rgba(250,246,240,0.5);
+}
+
+/* ── NAV BACK LINK ────────────────────────────────────────── */
+.nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Playfair Display SC', serif;
+  font-size: 1.0rem;
+  letter-spacing: 0.18em;
+  color: rgba(250,246,240,0.55);
+  text-decoration: none;
+  padding: 1rem 1.5rem;
+  transition: color 0.2s;
+  position: relative;
+  z-index: 1;
+}
+.nav-back:hover { color: var(--gold); }
+.nav-back::before { content: '←'; font-family: sans-serif; }
+.nav-back:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* ── FOOTER ───────────────────────────────────────────────── */
+footer {
+  background: #120202;
+  text-align: center;
+  padding: 2rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(250,246,240,0.2);
+}
+
+/* ── LANGUAGE TOGGLE ─────────────────────────────────────── */
+.language-toggle {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 220;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border: 1px solid rgba(250,246,240,0.35);
+  background: rgba(18, 2, 2, 0.78);
+  padding: 0.2rem;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.language-toggle:hover {
+  transform: translateY(-2px);
+  background: rgba(58, 10, 10, 0.95);
+  border-color: rgba(250,246,240,0.55);
+}
+.language-toggle-option {
+  border: 0;
+  background: transparent;
+  color: rgba(250,246,240,0.8);
+  font-family: 'Playfair Display SC', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.62rem;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.language-toggle-option:hover {
+  color: var(--ivory);
+}
+.language-toggle-option.active {
+  background: rgba(250,246,240,0.18);
+  color: var(--ivory);
+}
+.language-toggle-option:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .radio-group { flex-direction: column; }
+  .name-row { flex-direction: column; align-items: flex-start; }
+  .name-row .person-num { display: none; }
+  .language-toggle {
+    right: 0.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.18rem;
+  }
+  .language-toggle-option {
+    font-size: 0.82rem;
+    padding: 0.4rem 0.56rem;
+  }
+}
+
+/* ── SCROLL REVEAL ────────────────────────────────────────── */
+/* Include this JS snippet on every page:
+
+const revealEls = document.querySelectorAll('.section');
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in-view');
+      revealObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObs.observe(el));
+*/

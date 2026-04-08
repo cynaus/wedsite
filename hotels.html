@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Accommodations — Cynthia & Austin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display+SC:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Page-specific styles -->
+  <style>
+    /* ── HOTEL GRID ─────────────────────────────────────── */
+    .hotels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .hotel-card {
+      background: var(--ivory);
+      border: 1px solid rgba(192,39,42,0.12);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hotel-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(192,39,42,0.1);
+    }
+
+    .hotel-card-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+      background: var(--ivory-dark); /* fallback while img loads */
+    }
+
+    .hotel-card-body {
+      padding: 1.25rem 1.4rem 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hotel-tier {
+      font-family: 'Playfair Display SC', serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.22em;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+
+    .hotel-name {
+      font-family: 'Playfair Display SC', serif;
+      font-size: clamp(1.3rem, 4vw, 1.5rem);
+      color: var(--text-dark);
+      line-height: 1.1;
+      margin-bottom: 0.3rem;
+    }
+
+    .hotel-addr {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.65rem;
+      color: var(--text-mid);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .hotel-desc {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--text-mid);
+      line-height: 1.75;
+      flex: 1;
+      margin-bottom: 1.1rem;
+    }
+
+    .hotel-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.1rem;
+      flex-wrap: wrap;
+    }
+    .hotel-meta-item {
+      font-family: 'Playfair Display SC', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .hotel-meta-item span { font-size: 0.85rem; }
+
+    .hotel-distance {
+      display: inline-block;
+      font-family: 'Playfair Display SC', serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      color: var(--red-dark);
+      border: 1px solid rgba(192,39,42,0.3);
+      padding: 0.2rem 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .hotel-card-footer {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.9rem 1.4rem;
+      border-top: 1px solid rgba(192,39,42,0.1);
+      background: var(--ivory-dark);
+    }
+
+    .btn-hotel {
+      flex: 1;
+      text-align: center;
+      font-family: 'Playfair Display SC', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      padding: 0.65rem 0.5rem;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+      border: 1px solid var(--red-dark);
+    }
+    .btn-hotel-primary {
+      background: var(--red-dark);
+      color: var(--ivory);
+    }
+    .btn-hotel-primary:hover { background: var(--red-deep); }
+    .btn-hotel-secondary {
+      background: transparent;
+      color: var(--red-dark);
+    }
+    .btn-hotel-secondary:hover {
+      background: rgba(192,39,42,0.07);
+    }
+
+    /* ── INTRO TEXT ─────────────────────────────────────── */
+    .hotels-intro {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      font-style: italic;
+      line-height: 1.9;
+      color: var(--text-mid);
+      text-align: center;
+      max-width: 580px;
+      margin: 0 auto 3rem;
+    }
+
+    /* ── HOTEL CATEGORY LABEL ──────────────────────────── */
+    .hotel-category-label {
+      font-family: 'Playfair Display SC', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.28em;
+      color: var(--gold);
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(192,39,42,0.15);
+    }
+    .hotel-category-label:first-of-type { margin-top: 0; }
+
+    /* ── SECTION OVERRIDE for this page ────────────────── */
+    /* Hotels section gets a wider max-width for the grid */
+    #sec-hotels { max-width: 1000px; }
+  </style>
+</head>
+<body>
+
+  <!-- ── PAGE HEADER ──────────────────────────────────── -->
+  <div class="page-header">
+    <a class="nav-back" href="index.html?from=hotels">Back to Invitation</a>
+    <p class="page-header-eyebrow">Cynthia &amp; Austin · February 27, 2027</p>
+    <h1 class="page-header-title">Accommodations</h1>
+    <div class="page-header-divider"></div>
+    <p class="page-header-sub">Santa Barbara, California</p>
+  </div>
+
+  <!-- ── HOTELS SECTION ───────────────────────────────── -->
+  <div class="section-bg-ivory">
+    <div class="section in-view" id="sec-hotels">
+
+      <div class="section-sep">
+        <div class="sep-line"></div>
+        <div class="sep-img"></div>
+        <div class="sep-line"></div>
+      </div>
+
+      <p class="hotels-intro">
+        We have arranged a selection of nearby hotels to suit every preference.
+        Each is within easy reach of both the ceremony and reception venues.
+      </p>
+
+      <!-- HIGH-END PICKS -->
+      <p class="hotel-category-label">High-End Picks</p>
+      <div class="hotels-grid">
+
+        <!-- HOTEL CARD 1 — Hotel Californian -->
+        <div class="hotel-card">
+          <img class="hotel-card-img" src="img/hotels/hotel-californian.jpg" alt="Hotel Californian" loading="lazy">
+          <div class="hotel-card-body">
+            <p class="hotel-tier">★★★★★ · Boutique Luxury</p>
+            <h2 class="hotel-name">Hotel Californian</h2>
+            <p class="hotel-addr">36 State St, Santa Barbara, CA 93101</p>
+            <p class="hotel-distance">1.4 mi to ceremony · 0.7 mi to reception</p>
+            <p class="hotel-desc">
+              A stunning Spanish Colonial Revival hotel steps from the beach, blending old-world
+              grandeur with modern luxury just moments from the reception venue.
+            </p>
+            <div class="hotel-meta">
+              <div class="hotel-meta-item"><span>🅿️</span> Valet Available</div>
+              <div class="hotel-meta-item"><span>🏊</span> Pool & Spa</div>
+            </div>
+          </div>
+          <div class="hotel-card-footer">
+            <a class="btn-hotel btn-hotel-primary" href="https://www.hotelcalifornian.com" target="_blank" rel="noopener noreferrer">Book Now</a>
+            <a class="btn-hotel btn-hotel-secondary" href="https://www.google.com/maps/dir/?api=1&destination=36+State+St,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Directions</a>
+          </div>
+        </div>
+
+        <!-- HOTEL CARD 2 — Kimpton Canary -->
+        <div class="hotel-card">
+          <img class="hotel-card-img" src="img/hotels/kimpton-canary-hotel.jpg" alt="Kimpton Canary Hotel" loading="lazy">
+          <div class="hotel-card-body">
+            <p class="hotel-tier">★★★★ · Historic</p>
+            <h2 class="hotel-name">Kimpton Canary Hotel</h2>
+            <p class="hotel-addr">31 W Carrillo St, Santa Barbara, CA 93101</p>
+            <p class="hotel-distance">0.9 mi to ceremony · 0.3 mi to reception</p>
+            <p class="hotel-desc">
+              A beloved downtown landmark with a rooftop pool overlooking the Santa Barbara skyline,
+              offering warmly appointed rooms and signature Kimpton hospitality.
+            </p>
+            <div class="hotel-meta">
+              <div class="hotel-meta-item"><span>🅿️</span> Self-Park Garage</div>
+              <div class="hotel-meta-item"><span>🐾</span> Pet Friendly</div>
+            </div>
+          </div>
+          <div class="hotel-card-footer">
+            <a class="btn-hotel btn-hotel-primary" href="https://www.canarysantabarbara.com" target="_blank" rel="noopener noreferrer">Book Now</a>
+            <a class="btn-hotel btn-hotel-secondary" href="https://www.google.com/maps/dir/?api=1&destination=31+W+Carrillo+St,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Directions</a>
+          </div>
+        </div>
+
+        <!-- HOTEL CARD 3 — The Milo -->
+        <div class="hotel-card">
+          <img class="hotel-card-img" src="img/hotels/hotel-milo.jpg" alt="The Milo" loading="lazy">
+          <div class="hotel-card-body">
+            <p class="hotel-tier">★★★★ · Boutique</p>
+            <h2 class="hotel-name">The Milo</h2>
+            <p class="hotel-addr">202 W Cabrillo Blvd, Santa Barbara, CA 93101</p>
+            <p class="hotel-distance">1.5 mi to ceremony · 0.9 mi to reception</p>
+            <p class="hotel-desc">
+              A chic beachfront retreat on the Santa Barbara waterfront with easy access to
+              the harbor, State Street, and the best of the California coast.
+            </p>
+            <div class="hotel-meta">
+              <div class="hotel-meta-item"><span>🌊</span> Beachfront</div>
+              <div class="hotel-meta-item"><span>🅿️</span> On-Site Parking</div>
+            </div>
+          </div>
+          <div class="hotel-card-footer">
+            <a class="btn-hotel btn-hotel-primary" href="https://www.themilo.com/" target="_blank" rel="noopener noreferrer">Book Now</a>
+            <a class="btn-hotel btn-hotel-secondary" href="https://www.google.com/maps/dir/?api=1&destination=202+W+Cabrillo+Blvd,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Directions</a>
+          </div>
+        </div>
+
+      </div><!-- /.hotels-grid (high-end) -->
+
+      <!-- BUDGET PICKS -->
+      <p class="hotel-category-label">Budget Picks</p>
+      <div class="hotels-grid">
+
+        <!-- HOTEL CARD 4 — Harbor House Inn -->
+        <div class="hotel-card">
+          <img class="hotel-card-img" src="img/hotels/harbor-house-inn.jpg" alt="Harbor House Inn" loading="lazy">
+          <div class="hotel-card-body">
+            <p class="hotel-tier">★★★ · Charming</p>
+            <h2 class="hotel-name">Harbor House Inn</h2>
+            <p class="hotel-addr">104 Bath St, Santa Barbara, CA 93101</p>
+            <p class="hotel-distance">1.3 mi to ceremony · 0.7 mi to reception</p>
+            <p class="hotel-desc">
+              A cozy inn near the Santa Barbara harbor offering comfortable rooms and a
+              peaceful setting within easy walking distance of the waterfront.
+            </p>
+            <div class="hotel-meta">
+              <div class="hotel-meta-item"><span>🅿️</span> Free Parking</div>
+              <div class="hotel-meta-item"><span>🚢</span> Near Harbor</div>
+            </div>
+          </div>
+          <div class="hotel-card-footer">
+            <a class="btn-hotel btn-hotel-primary" href="https://harborhouseinn.com/" target="_blank" rel="noopener noreferrer">Book Now</a>
+            <a class="btn-hotel btn-hotel-secondary" href="https://www.google.com/maps/dir/?api=1&destination=104+Bath+St,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Directions</a>
+          </div>
+        </div>
+
+        <!-- HOTEL CARD 5 — Lavender Inn -->
+        <div class="hotel-card">
+          <img class="hotel-card-img" src="img/hotels/lavender-inn.jpg" alt="Lavender Inn by the Sea" loading="lazy">
+          <div class="hotel-card-body">
+            <p class="hotel-tier">★★★ · Boutique</p>
+            <h2 class="hotel-name">Lavender Inn by the Sea</h2>
+            <p class="hotel-addr">206 Castillo St, Santa Barbara, CA 93101</p>
+            <p class="hotel-distance">1.3 mi to ceremony · 0.6 mi to reception</p>
+            <p class="hotel-desc">
+              A welcoming boutique inn just blocks from the beach, with garden-inspired charm
+              and a warm atmosphere that feels like home.
+            </p>
+            <div class="hotel-meta">
+              <div class="hotel-meta-item"><span>🅿️</span> Free Parking</div>
+              <div class="hotel-meta-item"><span>🌸</span> Garden Patio</div>
+            </div>
+          </div>
+          <div class="hotel-card-footer">
+            <a class="btn-hotel btn-hotel-primary" href="https://www.sbhotels.com/lavender-inn-by-the-sea" target="_blank" rel="noopener noreferrer">Book Now</a>
+            <a class="btn-hotel btn-hotel-secondary" href="https://www.google.com/maps/dir/?api=1&destination=206+Castillo+St,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Directions</a>
+          </div>
+        </div>
+
+        <!-- HOTEL CARD 6 — Orange Tree Inn -->
+        <div class="hotel-card">
+          <img class="hotel-card-img" src="img/hotels/orange-tree-inn.jpg" alt="Orange Tree Inn" loading="lazy">
+          <div class="hotel-card-body">
+            <p class="hotel-tier">★★ · Budget</p>
+            <h2 class="hotel-name">Orange Tree Inn</h2>
+            <p class="hotel-addr">1920 State St, Santa Barbara, CA 93101</p>
+            <p class="hotel-distance">0.4 mi to ceremony · 1.1 mi to reception</p>
+            <p class="hotel-desc">
+              A cheerful budget-friendly inn on State Street with an outdoor pool, offering
+              a relaxed California feel at an accessible price.
+            </p>
+            <div class="hotel-meta">
+              <div class="hotel-meta-item"><span>🅿️</span> Free Parking</div>
+              <div class="hotel-meta-item"><span>🏊</span> Outdoor Pool</div>
+            </div>
+          </div>
+          <div class="hotel-card-footer">
+            <a class="btn-hotel btn-hotel-primary" href="https://www.orangetreeinn.com/" target="_blank" rel="noopener noreferrer">Book Now</a>
+            <a class="btn-hotel btn-hotel-secondary" href="https://www.google.com/maps/dir/?api=1&destination=1920+State+St,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Directions</a>
+          </div>
+        </div>
+
+        <!-- HOTEL CARD 7 — Motel 6 -->
+        <div class="hotel-card">
+          <img class="hotel-card-img" src="img/hotels/motel-6.jpg" alt="Motel 6" loading="lazy">
+          <div class="hotel-card-body">
+            <p class="hotel-tier">★★ · Value</p>
+            <h2 class="hotel-name">Motel 6</h2>
+            <p class="hotel-addr">443 Corona Del Mar, Santa Barbara, CA 93103</p>
+            <p class="hotel-distance">1.3 mi to ceremony · 0.7 mi to reception</p>
+            <p class="hotel-desc">
+              Well-located near the waterfront, this Motel 6 is actually the original. Its rooms were recently updated.
+            </p>
+            <div class="hotel-meta">
+              <div class="hotel-meta-item"><span>🅿️</span> Free Parking</div>
+              <div class="hotel-meta-item"><span>💰</span> Best Value</div>
+            </div>
+          </div>
+          <div class="hotel-card-footer">
+            <a class="btn-hotel btn-hotel-primary" href="https://www.motel6.com" target="_blank" rel="noopener noreferrer">Book Now</a>
+            <a class="btn-hotel btn-hotel-secondary" href="https://www.google.com/maps/dir/?api=1&destination=443+Corona+Del+Mar,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Directions</a>
+          </div>
+        </div>
+
+      </div><!-- /.hotels-grid (budget) -->
+    </div><!-- /.section -->
+  </div>
+
+  <!-- ── FOOTER ────────────────────────────────────────── -->
+  <footer>
+    <p>Cynthia &amp; Austin &nbsp;·&nbsp; February 27, 2027 &nbsp;·&nbsp; Santa Barbara, California</p>
+  </footer>
+
+  <div class="language-toggle" id="language-toggle" role="group" aria-label="Language selector">
+    <button type="button" class="language-toggle-option" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" class="language-toggle-option" data-lang="es" aria-pressed="false">ES</button>
+  </div>
+
+  <script>
+    const LANGUAGE_STORAGE_KEY = 'preferredLanguage';
+    const I18N_HOTELS = {
+      en: {
+        languageSelectorLabel: 'Language selector',
+        title: 'Accommodations — Cynthia & Austin',
+        back: 'Back to Invitation',
+        eyebrow: 'Cynthia & Austin · February 27, 2027',
+        pageTitle: 'Accommodations',
+        location: 'Santa Barbara, California',
+        intro: 'We have arranged a selection of nearby hotels to suit every preference. Each is within easy reach of both the ceremony and reception venues.',
+        categoryLabels: ['High-End Picks', 'Budget Picks'],
+        tiers: [
+          '★★★★★ · Boutique Luxury', '★★★★ · Historic', '★★★★ · Boutique',
+          '★★★ · Charming', '★★★ · Boutique', '★★ · Budget', '★★ · Value',
+        ],
+        distances: [
+          '1.4 mi to ceremony · 0.7 mi to reception',
+          '0.9 mi to ceremony · 0.3 mi to reception',
+          '1.5 mi to ceremony · 0.9 mi to reception',
+          '1.3 mi to ceremony · 0.7 mi to reception',
+          '1.3 mi to ceremony · 0.6 mi to reception',
+          '0.4 mi to ceremony · 1.1 mi to reception',
+          '1.3 mi to ceremony · 0.7 mi to reception',
+        ],
+        descriptions: [
+          'A stunning Spanish Colonial Revival hotel steps from the beach, blending old-world grandeur with modern luxury just moments from the reception venue.',
+          'A beloved downtown landmark with a rooftop pool overlooking the Santa Barbara skyline, offering warmly appointed rooms and signature Kimpton hospitality.',
+          'A chic beachfront retreat on the Santa Barbara waterfront with easy access to the harbor, State Street, and the best of the California coast.',
+          'A cozy inn near the Santa Barbara harbor offering comfortable rooms and a peaceful setting within easy walking distance of the waterfront.',
+          'A welcoming boutique inn just blocks from the beach, with garden-inspired charm and a warm atmosphere that feels like home.',
+          'A cheerful budget-friendly inn on State Street with an outdoor pool, offering a relaxed California feel at an accessible price.',
+          'Clean, comfortable, and conveniently located near the waterfront — a straightforward option for guests focused on value.',
+        ],
+        metaItems: [
+          'Valet Available', 'Pool & Spa',
+          'Self-Park Garage', 'Pet Friendly',
+          'Beachfront', 'On-Site Parking',
+          'Free Parking', 'Near Harbor',
+          'Free Parking', 'Garden Patio',
+          'Free Parking', 'Outdoor Pool',
+          'Free Parking', 'Best Value',
+        ],
+        buttons: ['Book Now', 'Directions'],
+        footer: 'Cynthia & Austin · February 27, 2027 · Santa Barbara, California',
+      },
+      es: {
+        languageSelectorLabel: 'Selector de idioma',
+        title: 'Hospedaje — Cynthia y Austin',
+        back: 'Volver a la invitación',
+        eyebrow: 'Cynthia y Austin · 27 de febrero de 2027',
+        pageTitle: 'Hospedaje',
+        location: 'Santa Bárbara, California',
+        intro: 'Hemos seleccionado una lista de hoteles cercanos para cada preferencia. Todos están a poca distancia tanto de la ceremonia como de la recepción.',
+        categoryLabels: ['Opciones de lujo', 'Opciones económicas'],
+        tiers: [
+          '★★★★★ · Lujo boutique', '★★★★ · Histórico', '★★★★ · Boutique',
+          '★★★ · Encantador', '★★★ · Boutique', '★★ · Económico', '★★ · Valor',
+        ],
+        distances: [
+          '1.4 mi a la ceremonia · 0.7 mi a la recepción',
+          '0.9 mi a la ceremonia · 0.3 mi a la recepción',
+          '1.5 mi a la ceremonia · 0.9 mi a la recepción',
+          '1.3 mi a la ceremonia · 0.7 mi a la recepción',
+          '1.3 mi a la ceremonia · 0.6 mi a la recepción',
+          '0.4 mi a la ceremonia · 1.1 mi a la recepción',
+          '1.3 mi a la ceremonia · 0.7 mi a la recepción',
+        ],
+        descriptions: [
+          'Un impresionante hotel de estilo Colonial Español, a pasos de la playa y del lugar de la recepción, que combina elegancia clásica con comodidad moderna.',
+          'Un histórico referente del centro con piscina en la azotea y vistas al horizonte de Santa Bárbara, habitaciones acogedoras y la calidez característica de Kimpton.',
+          'Un elegante hotel frente al mar en el paseo marítimo de Santa Bárbara, con acceso fácil al puerto, State Street y lo mejor de la costa californiana.',
+          'Una acogedora posada cerca del puerto de Santa Bárbara con habitaciones confortables y un entorno tranquilo a poca distancia del paseo marítimo.',
+          'Una encantadora posada boutique a pasos de la playa, con detalles de jardín y un ambiente cálido que hace sentir como en casa.',
+          'Una posada económica y alegre sobre State Street con piscina al aire libre, que ofrece el ambiente relajado de California a un precio accesible.',
+          'Limpio, cómodo y convenientemente ubicado cerca del paseo marítimo — una opción directa para los invitados que buscan el mejor valor.',
+        ],
+        metaItems: [
+          'Valet disponible', 'Piscina y spa',
+          'Estacionamiento propio', 'Pet friendly',
+          'Frente al mar', 'Estacionamiento propio',
+          'Estacionamiento gratis', 'Cerca del puerto',
+          'Estacionamiento gratis', 'Jardín y terraza',
+          'Estacionamiento gratis', 'Piscina al aire libre',
+          'Estacionamiento gratis', 'Mejor precio',
+        ],
+        buttons: ['Reservar', 'Cómo llegar'],
+        footer: 'Cynthia y Austin · 27 de febrero de 2027 · Santa Bárbara, California',
+      },
+    };
+
+    function setText(selector, value) {
+      const el = document.querySelector(selector);
+      if (el) el.textContent = value;
+    }
+
+    function applyHotelsTranslations(lang) {
+      const copy = I18N_HOTELS[lang] || I18N_HOTELS.en;
+      document.title = copy.title;
+      setText('.nav-back', copy.back);
+      setText('.page-header-eyebrow', copy.eyebrow);
+      setText('.page-header-title', copy.pageTitle);
+      setText('.page-header-sub', copy.location);
+      setText('.hotels-intro', copy.intro);
+
+      const categoryLabels = document.querySelectorAll('.hotel-category-label');
+      categoryLabels.forEach((el, i) => { if (copy.categoryLabels[i]) el.textContent = copy.categoryLabels[i]; });
+
+      const tiers = document.querySelectorAll('.hotel-tier');
+      tiers.forEach((el, i) => { if (copy.tiers[i]) el.textContent = copy.tiers[i]; });
+      const distances = document.querySelectorAll('.hotel-distance');
+      distances.forEach((el, i) => { if (copy.distances[i]) el.textContent = copy.distances[i]; });
+      const descriptions = document.querySelectorAll('.hotel-desc');
+      descriptions.forEach((el, i) => { if (copy.descriptions[i]) el.textContent = copy.descriptions[i]; });
+
+      const metaItems = document.querySelectorAll('.hotel-meta-item');
+      metaItems.forEach((el, i) => {
+        const icon = el.querySelector('span');
+        if (!icon || !copy.metaItems[i]) return;
+        el.innerHTML = '';
+        el.appendChild(icon);
+        el.append(` ${copy.metaItems[i]}`);
+      });
+
+      document.querySelectorAll('.btn-hotel-primary').forEach((el) => { el.textContent = copy.buttons[0]; });
+      document.querySelectorAll('.btn-hotel-secondary').forEach((el) => { el.textContent = copy.buttons[1]; });
+      const footerText = document.querySelector('footer p');
+      if (footerText) footerText.textContent = copy.footer;
+    }
+
+    function applyLanguage(lang) {
+      const normalized = lang === 'es' ? 'es' : 'en';
+      const toggle = document.getElementById('language-toggle');
+
+      document.documentElement.lang = normalized;
+      document.documentElement.dataset.language = normalized;
+      applyHotelsTranslations(normalized);
+
+      if (!toggle) return;
+      toggle.setAttribute('aria-label', (I18N_HOTELS[normalized] || I18N_HOTELS.en).languageSelectorLabel);
+
+      const options = toggle.querySelectorAll('.language-toggle-option');
+      options.forEach((option) => {
+        const isActive = option.dataset.lang === normalized;
+        option.classList.toggle('active', isActive);
+        option.setAttribute('aria-pressed', String(isActive));
+      });
+
+      document.querySelectorAll('a[href]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('http') || href.startsWith('#')) return;
+        const [base, query] = href.split('?');
+        const params = new URLSearchParams(query || '');
+        if (normalized === 'es') { params.set('lang', 'es'); } else { params.delete('lang'); }
+        const qs = params.toString();
+        link.href = qs ? `${base}?${qs}` : base;
+      });
+    }
+
+    function initLanguageToggle() {
+      const toggle = document.getElementById('language-toggle');
+      let startingLanguage = 'en';
+
+      try {
+        const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+        if (savedLanguage === 'es') startingLanguage = 'es';
+      } catch (err) {
+        console.warn('Language preference could not be read from localStorage.', err);
+      }
+
+      const urlLang = new URLSearchParams(window.location.search).get('lang');
+      if (urlLang === 'es') {
+        startingLanguage = 'es';
+        try { localStorage.setItem(LANGUAGE_STORAGE_KEY, 'es'); } catch (_) {}
+      } else if (urlLang === 'en') {
+        startingLanguage = 'en';
+        try { localStorage.setItem(LANGUAGE_STORAGE_KEY, 'en'); } catch (_) {}
+      }
+
+      applyLanguage(startingLanguage);
+      if (!toggle) return;
+
+      toggle.addEventListener('click', (event) => {
+        const option = event.target.closest('.language-toggle-option');
+        if (!option) return;
+
+        const nextLanguage = option.dataset.lang === 'es' ? 'es' : 'en';
+        applyLanguage(nextLanguage);
+        try {
+          localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+        } catch (err) {
+          console.warn('Language preference could not be saved to localStorage.', err);
+        }
+      });
+    }
+
+    initLanguageToggle();
+
+    // Scroll reveal — same pattern as index.html
+    const revealEls = document.querySelectorAll('.section');
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in-view');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    revealEls.forEach(el => revealObs.observe(el));
+  </script>
+
+</body>
+</html>

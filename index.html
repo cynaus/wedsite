@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>The Wedding of Cynthia & Austin</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display+SC:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Page-specific styles -->
+  <style>
+    /* ══════════════════════════════════════
+      ENVELOPE SCREEN
+    ══════════════════════════════════════ */
+    #envelope-screen {
+      position: fixed; inset: 0; z-index: 100;
+      background:
+        radial-gradient(ellipse at center, #3a0a0a 0%, #1a0505 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.9s ease, visibility 0.9s ease;
+      overflow: hidden;
+    }
+    #envelope-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(80% 80% at 35% 40%, rgba(255, 235, 195, 0.08), transparent 75%);
+      mix-blend-mode: screen;
+      opacity: 0.5;
+    }
+    #envelope-screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 160px rgba(8, 3, 2, 0.85);
+    }
+    #envelope-screen.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .env-hint {
+      font-family: 'Playfair Display SC', serif;
+      color: rgba(250, 232, 198, 0.7);
+      font-size: clamp(0.72rem, 2.3vw, 0.95rem);
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      margin-top: 2.2rem;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+      animation: pulse 3.2s ease-in-out infinite;
+      position: relative;
+      z-index: 2;
+    }
+    @keyframes pulse { 0%,100%{opacity:0.45} 50%{opacity:0.95} }
+
+    /* SVG envelope */
+    .envelope-wrap {
+      position: relative;
+      width: clamp(270px, 62vw, 450px);
+      filter: drop-shadow(0 28px 54px rgba(10, 3, 2, 0.7));
+      z-index: 2;
+      perspective: 1400px;
+    }
+    .envelope-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -20px;
+      background: radial-gradient(ellipse at center, rgba(241, 207, 157, 0.2) 0%, transparent 68%);
+      filter: blur(14px);
+      opacity: 0.7;
+      z-index: -1;
+    }
+
+    svg.env { width: 100%; height: auto; overflow: visible; }
+
+    /* envelope body */
+    .env-body { fill: url(#envBodyGrad); filter: url(#roughPaper); }
+    .env-side-l { fill: url(#envLeftGrad); filter: url(#roughPaper); }
+    .env-side-r { fill: url(#envRightGrad); filter: url(#roughPaper); }
+    .env-bottom { fill: url(#envBottomGrad); filter: url(#roughPaper); }
+    .env-paper-overlay {
+      fill: url(#paperTexture);
+      opacity: 0.22;
+    }
+
+    /* flap */
+    .flap-group {
+      transform-origin: 210px 80px;
+      transform-style: preserve-3d;
+      backface-visibility: visible;
+      transition: transform 11.5s cubic-bezier(0.23, 0.74, 0.24, 1);
+    }
+    .flap-group.open { transform: rotateX(-152deg) translateY(-2px); }
+
+    .env-flap {
+      fill: url(#envFlapGrad);
+      filter: drop-shadow(0 -4px 8px rgba(0,0,0,0.2)) url(#roughPaper);
+    }
+    .env-flap-back {
+      fill: #b08f72;
+      backface-visibility: visible;
+    }
+    .flap-front-layer {
+      opacity: 1;
+    }
+    .flap-back-layer {
+      opacity: 0;
+    }
+    .flap-back-static {
+      fill: #b08f72;
+    }
+    .envelope-wrap.past-fold .flap-front-layer { opacity: 0; }
+    .envelope-wrap.past-fold .flap-back-layer { opacity: 1; }
+
+    /* wax seal */
+    .seal-group {
+      transform-origin: center;
+      backface-visibility: visible;
+    }
+    .seal-img {
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+    }
+    .seal-monogram {
+      font-family: 'Playfair Display SC', serif;
+      font-size: 13.5px;
+      fill: #f8ecda;
+      letter-spacing: 0.8px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0s linear 2.23s;
+    }
+    .flap-group.open .seal-monogram { opacity: 0; }
+
+    /* letter sliding out */
+    .env-letter {
+      transform: translateY(55px);
+      transition: transform 2.35s cubic-bezier(0.42, 0, 0.22, 1);
+    }
+    .env-letter.open {
+      transform: translateY(-72px);
+    }
+
+    /* ══════════════════════════════════════
+      HERO SECTION
+    ══════════════════════════════════════ */
+    #hero {
+      position: relative;
+      width: 100%; height: 100svh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+    #hero.visible { opacity: 1; }
+
+    .hero-parallax {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    /* Each layer is oversized so JS parallax never exposes gaps. */
+    .hero-layer {
+      position: absolute;
+      width: 135%;
+      height: 135%;
+      left: -17.5%;
+      top: -17.5%;
+      background-repeat: no-repeat;
+      will-change: transform;
+      transform: translateZ(0);
+    }
+    .hero-layer.sky {
+      background-image: url('img/sky-clouds.png');
+      background-position: center top;
+      background-size: cover;
+      z-index: 0;
+      filter: brightness(0.9);
+    }
+    .hero-layer.church {
+      background-image: url('img/bg-church.png');
+      background-size: 1024px auto;
+      background-position: center bottom;
+      z-index: 1;
+      filter: brightness(0.8);
+    }
+    .hero-layer.arch-left,
+    .hero-layer.arch-right {
+      width: 64%;
+      height: 135%;
+      top: -17.5%;
+      left: auto;
+      right: auto;
+      background: none;
+      z-index: 3;
+    }
+    .hero-layer.arch-left { left: -3%; }
+    .hero-layer.arch-right { right: -3%; left: auto; }
+
+    .arch-inner {
+      position: absolute;
+      inset: 0;
+      background-image: url('img/garden-arch-left-edit.png');
+      background-size: auto 100%;
+      background-repeat: no-repeat;
+      background-position: center center;
+    }
+    .hero-layer.arch-right .arch-inner {
+      transform: scaleX(-1);
+      background-position: center center;
+    }
+    .hero-layer.bushes {
+      background-image: url('img/bushes.png');
+      background-repeat: repeat-x;
+      background-size: auto 42vh;
+      background-position: center 100%;
+      z-index: 4;
+      transform-origin: center bottom;
+    }
+
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom,
+        rgba(9, 2, 2, 0.3) 0%,
+        rgba(9, 2, 2, 0.08) 30%,
+        rgba(9, 2, 2, 0.12) 60%,
+        rgba(9, 2, 2, 0.58) 100%);
+      z-index: 2;
+    }
+
+    .hero-content {
+      position: relative; z-index: 5;
+      text-align: center;
+      padding: 2rem;
+    }
+    .hero-copy-fade {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    #hero.visible .hero-copy-fade {
+      animation: fadeUp 0.95s ease 1.25s both;
+    }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:none} }
+
+    .hero-eyebrow {
+      font-family: 'Playfair Display SC', serif;
+      font-size: clamp(0.8rem, 2vw, 1.0rem);
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: #f6efe3;
+      -webkit-text-stroke: 0.35px rgba(92, 58, 35, 0.45);
+      margin-bottom: 0.75rem;
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.45),
+        0 6px 18px rgba(0,0,0,0.5);
+    }
+
+    .hero-wedding-of {
+      font-family: 'Playfair Display SC', serif;
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      font-weight: 700;
+      color: var(--ivory-dark);
+      display: block;
+      margin-bottom: 0.3em;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.45),
+        0 6px 18px rgba(0,0,0,0.5);
+    }
+
+    .hero-names {
+      font-family: 'Alex Brush', cursive;
+      font-size: clamp(3rem, 12vw, 7rem);
+      font-weight: 300;
+      color: var(--ivory);
+      line-height: 1;
+      text-shadow:
+        0 2px 4px rgba(0,0,0,0.55),
+        0 10px 28px rgba(0,0,0,0.6);
+    }
+
+    .hero-ampersand {
+      color: var(--red);
+      font-style: italic;
+      display: block;
+      font-size: clamp(2.5rem, 10vw, 5.5rem);
+      margin: 0.1em 0;
+    }
+    .letter-span {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.42s ease, transform 0.42s ease;
+    }
+    .letter-span.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hero-divider {
+      width: 80px; height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      margin: 1.5rem auto;
+    }
+
+    .hero-date {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.1rem, 3.5vw, 1.6rem);
+      color: var(--ivory-dark);
+      font-style: italic;
+      letter-spacing: 0.05em;
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.45),
+        0 6px 18px rgba(0,0,0,0.5);
+    }
+
+    .hero-location {
+      font-family: 'Playfair Display SC', serif;
+      font-size: clamp(0.8rem, 2vw, 1.0rem);
+      letter-spacing: 0.3em;
+      color: rgba(250,246,240,0.65);
+      margin-top: 0.75rem;
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.45),
+        0 6px 18px rgba(0,0,0,0.5);
+    }
+
+    /* scroll indicator */
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      z-index: 6;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    #hero.visible .scroll-hint {
+      animation: fadeUp 0.85s ease 1.65s both;
+    }
+    .scroll-hint span {
+      display: block;
+      font-size: 0.9rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(250,246,240,0.78);
+      margin-bottom: 0.65rem;
+      font-weight: 600;
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.45),
+        0 5px 14px rgba(0,0,0,0.45);
+    }
+    .scroll-chevrons { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .scroll-chevrons i {
+      display: block; width: 14px; height: 14px;
+      border-right: 2px solid rgba(250,246,240,0.58);
+      border-bottom: 2px solid rgba(250,246,240,0.58);
+      transform: rotate(45deg);
+      animation: chevron 1.5s ease-in-out infinite;
+    }
+    .scroll-chevrons i:nth-child(2) { animation-delay: 0.15s; }
+    .scroll-chevrons i:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes chevron { 0%,100%{opacity:0.2} 50%{opacity:1} }
+
+    @media (max-width: 768px) {
+      .hero-layer.church { background-size: 760px auto; }
+      .hero-layer.arch-left,
+      .hero-layer.arch-right {
+        width: 70%;
+        height: 124%;
+        top: -12%;
+      }
+      .hero-layer.arch-left { left: -9%; }
+      .hero-layer.arch-right { right: -9%; }
+      .arch-inner { background-size: auto 92%; }
+      .hero-layer.bushes { background-size: auto 34vh; }
+    }
+
+    /* ══════════════════════════════════════
+      PETAL CANVAS
+    ══════════════════════════════════════ */
+    #petalCanvas {
+      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    #bloomCanvas {
+      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4;
+      pointer-events: none;
+    }
+
+    /* ══════════════════════════════════════
+      ACCOMMODATIONS
+    ══════════════════════════════════════ */
+    #accommodations { background: var(--ivory); }
+
+    .accomm-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 3vw, 1.25rem);
+      font-style: italic;
+      line-height: 1.9;
+      color: var(--text-mid);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    /* ══════════════════════════════════════
+      VENUE / MAP
+    ══════════════════════════════════════ */
+    #venue { background: var(--ivory-dark); }
+    #sec-venue { padding-bottom: clamp(1.5rem, 4vw, 2.5rem); }
+
+    .venue-details {
+      text-align: center; margin-bottom: 2rem;
+    }
+    .venue-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.3rem, 4vw, 1.8rem);
+      font-style: italic;
+      color: var(--text-dark);
+      margin-bottom: 0.3rem;
+    }
+    .venue-addr {
+      font-family: 'Playfair Display SC', serif;
+      font-size: 1.0rem;
+      letter-spacing: 0.12em;
+      color: var(--text-mid);
+    }
+
+    /* map tabs */
+    .map-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 0;
+    }
+    .map-tab {
+      font-family: 'Playfair Display SC', serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.2em;
+      padding: 0.7rem 2.5rem;
+      border: 1px solid rgba(192,39,42,0.25);
+      background: transparent;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .map-tab:first-child { border-right: none; }
+    .map-tab.active {
+      background: var(--red-dark);
+      color: var(--ivory);
+      border-color: var(--red-dark);
+    }
+    .map-tab:not(.active):hover {
+      background: rgba(192,39,42,0.07);
+      color: var(--red-dark);
+    }
+    .map-frame {
+      width: 100%;
+      height: clamp(300px, 55vw, 440px);
+      border: 1px solid rgba(192,39,42,0.15);
+      display: block;
+    }
+    .map-frame-wrap { display: none; }
+    .map-frame-wrap.active {
+      display: flex;
+      justify-content: center; /* Centers horizontally */
+    }
+
+    /* parking links */
+    .parking-list {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .parking-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(192,39,42,0.15);
+      background: var(--ivory);
+    }
+    .parking-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-style: italic;
+      color: var(--text-dark);
+    }
+    .parking-addr {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.65rem;
+      color: var(--text-mid);
+      margin-top: 2px;
+    }
+    .parking-link {
+      font-family: 'Playfair Display SC', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      color: var(--red-dark);
+      text-decoration: none;
+      white-space: nowrap;
+      margin-left: 1rem;
+      flex-shrink: 0;
+    }
+    .parking-link:hover { text-decoration: underline; }
+
+    #map-container {
+      width: 100%;
+      height: clamp(300px, 55vw, 440px);
+      border: 1px solid rgba(192,39,42,0.15);
+    }
+
+    /* ══════════════════════════════════════
+      ITINERARY
+    ══════════════════════════════════════ */
+    #itinerary { background: var(--ivory); }
+
+    .timeline {
+      position: relative;
+      padding-left: 2.5rem;
+      max-width: 520px; margin: 0 auto;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute; left: 0.55rem; top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--red), rgba(255,61,65,0.15));
+    }
+
+    .tl-item {
+      position: relative; margin-bottom: 2.2rem;
+      opacity: 0; transform: translateX(-20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .tl-item.in-view { opacity: 1; transform: none; }
+
+    .tl-dot {
+      position: absolute; left: -2.35rem; top: 0.15rem;
+      width: 22px; height: 22px;
+      background: var(--red);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: white;
+      box-shadow: 0 0 0 4px rgba(255,61,65,0.15);
+    }
+
+    .tl-time {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 0.2rem;
+    }
+    .tl-event {
+      font-family: 'Alex Brush', cursive;
+      font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+      color: var(--text-dark);
+    }
+    .tl-desc {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-style: italic;
+      color: var(--text-mid);
+      margin-top: 0.2rem;
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════
+      DINNER MENU
+    ══════════════════════════════════════ */
+    #sec-menu { background: var(--ivory-dark); }
+    .menu-wrap {
+      display: grid;
+      gap: 1.1rem;
+    }
+    .menu-block {
+      background: var(--ivory);
+      border: 1px solid rgba(192,39,42,0.12);
+      padding: 1.15rem 1.2rem;
+    }
+    .menu-block-title {
+      font-family: 'Playfair Display SC', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      color: var(--red-dark);
+      margin-bottom: 0.55rem;
+      text-transform: uppercase;
+    }
+    .menu-list {
+      list-style: none;
+      display: grid;
+      gap: 0.6rem;
+      margin: 0;
+      padding: 0;
+    }
+    .menu-item {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.07rem;
+      color: var(--text-mid);
+      line-height: 1.55;
+      font-style: italic;
+    }
+    .menu-item strong {
+      color: var(--text-dark);
+      font-style: normal;
+      font-weight: 600;
+    }
+    .menu-note {
+      margin-top: 1rem;
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: var(--text-mid);
+      font-size: 1.02rem;
+    }
+
+    /* ══════════════════════════════════════
+      GIFTS
+    ══════════════════════════════════════ */
+    #gifts { background: var(--ivory-dark); }
+
+    .gifts-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      font-style: italic;
+      line-height: 1.9;
+      color: var(--text-mid);
+      text-align: center;
+      margin-bottom: 2rem;
+      max-width: 560px; margin-left: auto; margin-right: auto;
+    }
+    #giftingGroup {
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    #giftingGroup .btn-primary {
+      margin: 0;
+    }
+
+    /* ══════════════════════════════════════
+      RSVP
+    ══════════════════════════════════════ */
+    #rsvp {
+      background: linear-gradient(160deg, #1a0505 0%, #3a0a0a 100%);
+      color: var(--ivory);
+    }
+    #rsvp-title { font-family: 'Playfair Display SC', serif; font-style: normal; color: var(--ivory); }
+    #rsvp .section-sub { color: rgba(250,246,240,0.5); }
+
+    .rsvp-deadline {
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+      color: var(--gold);
+      font-style: italic;
+      margin-bottom: 2.5rem;
+    }
+
+    .rsvp-form { max-width: 560px; margin: 0 auto; }
+
+    .form-group { margin-bottom: 1.5rem; }
+
+    label.form-label {
+      display: block;
+      font-family: 'Playfair Display SC', serif;
+      font-size: 1.0rem;
+      letter-spacing: 0.18em;
+      color: rgba(250,246,240,0.6);
+      margin-bottom: 0.5rem;
+    }
+    .form-label .form-note {
+      display: block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      text-transform: none;
+      color: rgba(250,246,240,0.35);
+      margin-top: 0.15rem;
+    }
+
+    input[type=text], input[type=email], input[type=number], textarea, select {
+      width: 100%;
+      background: rgba(250,246,240,0.06);
+      border: 1px solid rgba(250,246,240,0.2);
+      color: var(--ivory);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.85rem;
+      padding: 0.75rem 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+    input[type=number] {
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input:focus, textarea:focus { border-color: var(--red); }
+    textarea { resize: vertical; min-height: 90px; }
+    ::placeholder { color: rgba(250,246,240,0.25); }
+
+    /* number stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1px solid rgba(250,246,240,0.2);
+      width: fit-content;
+    }
+    .stepper button {
+      width: 44px; height: 44px;
+      background: rgba(255,61,65,0.15);
+      border: none; color: var(--ivory);
+      font-size: 1.2rem; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .stepper button:hover { background: rgba(255,61,65,0.35); }
+    .stepper input {
+      width: 60px; border: none;
+      border-left: 1px solid rgba(250,246,240,0.15);
+      border-right: 1px solid rgba(250,246,240,0.15);
+      text-align: center; height: 44px;
+      padding: 0;
+    }
+
+    /* dynamic name fields */
+    #name-fields { margin-top: 1rem; }
+    .name-row { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; align-items: center; }
+    .name-row .person-num {
+      font-size: 0.65rem; color: var(--red); min-width: 1.5rem;
+      text-align: center; font-weight: 500;
+    }
+
+    /* radio */
+    .radio-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .radio-label {
+      display: flex; align-items: center; gap: 0.5rem;
+      cursor: pointer; font-size: 0.8rem;
+      color: rgba(250,246,240,0.8);
+      padding: 0.6rem 1.2rem;
+      border: 1px solid rgba(250,246,240,0.2);
+      transition: border-color 0.2s, background 0.2s;
+      flex: 1; min-width: 160px; justify-content: center;
+    }
+    .radio-label input { display: none; }
+    .radio-label.selected-accept { border-color: #4caf82; background: rgba(76,175,130,0.1); color: #7de0b0; }
+    .radio-label.selected-decline { border-color: rgba(255,61,65,0.5); background: rgba(255,61,65,0.07); color: #ff8a8c; }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 1.1rem;
+      font-family: 'Playfair Display SC', serif;
+      font-size: 1.0rem;
+      letter-spacing: 0.3em;
+	  text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.25s, transform 0.2s;
+      margin-top: 1rem;
+    }
+    .btn-submit:hover { background: var(--red-dark); transform: translateY(-2px); }
+
+    /* success */
+    #rsvp-success {
+      display: none; text-align: center; padding: 3rem 1rem;
+    }
+    #rsvp-success .check {
+      font-size: 3rem; margin-bottom: 1rem;
+    }
+    #rsvp-success h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; color: var(--ivory); font-weight: 300;
+      margin-bottom: 0.5rem;
+    }
+    #rsvp-success p { color: rgba(250,246,240,0.55); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     ENVELOPE SCREEN
+═══════════════════════════════════ -->
+<div id="envelope-screen" onclick="openEnvelope()">
+  <div class="envelope-wrap" id="envWrap">
+    <svg class="env" viewBox="0 0 420 280" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="roughPaper" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="1" seed="8" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.25"/>
+        </filter>
+
+        <linearGradient id="envBodyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#efe3cf"/>
+          <stop offset="100%" stop-color="#dec7aa"/>
+        </linearGradient>
+        <linearGradient id="envLeftGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#d8bea0"/>
+          <stop offset="100%" stop-color="#c8aa87"/>
+        </linearGradient>
+        <linearGradient id="envRightGrad" x1="1" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d3b390"/>
+          <stop offset="100%" stop-color="#c19974"/>
+        </linearGradient>
+        <linearGradient id="envBottomGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#e6d1b7"/>
+          <stop offset="50%" stop-color="#dcc1a2"/>
+          <stop offset="100%" stop-color="#e3ceb2"/>
+        </linearGradient>
+        <linearGradient id="envFlapGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f1e4cf"/>
+          <stop offset="100%" stop-color="#d9bd9d"/>
+        </linearGradient>
+        <radialGradient id="sealGrad" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#d04b45"/>
+          <stop offset="70%" stop-color="#8d1b1b"/>
+          <stop offset="100%" stop-color="#611111"/>
+        </radialGradient>
+        <pattern id="paperTexture" patternUnits="userSpaceOnUse" width="420" height="280">
+          <image href="img/watercolor-paper.jpg" x="0" y="0" width="420" height="280" preserveAspectRatio="xMidYMid slice"/>
+        </pattern>
+        <clipPath id="envLetterStartClip">
+          <rect x="55" y="28" width="310" height="194" rx="3"/>
+        </clipPath>
+      </defs>
+
+      <!-- envelope body -->
+      <g id="envBack">
+        <rect class="env-body" x="20" y="80" width="380" height="200" rx="4"/>
+        <rect class="env-paper-overlay" x="20" y="80" width="380" height="200" rx="4"/>
+        <rect x="20" y="80" width="380" height="200" rx="4" fill="none" stroke="#9a4e30" stroke-width="1.3" opacity="0.56"/>
+        <rect x="24" y="84" width="372" height="192" rx="3" fill="none" stroke="#f0d8b9" stroke-width="0.6" opacity="0.5"/>
+      </g>
+
+      <!-- top flap behind the letter after the fold crossover -->
+      <g class="flap-group flap-back-layer" id="envFlapBackGroup">
+        <polygon class="flap-back-static" points="20,80 210,185 400,80"/>
+        <polygon class="env-paper-overlay" points="20,80 210,185 400,80"/>
+        <image class="seal-img" href="img/wax-seal.png" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
+      </g>
+
+      <!-- invitation starts inside envelope -->
+      <g class="env-letter" id="envLetter" clip-path="url(#envLetterStartClip)">
+        <rect x="55" y="28" width="310" height="194" fill="#f9f0e2" rx="3" filter="url(#roughPaper)"/>
+        <rect x="65" y="38" width="290" height="174" fill="none" stroke="#cfad79" stroke-width="0.8" opacity="0.7"/>
+        <line x1="84" y1="86" x2="336" y2="86" stroke="#ceb79a" stroke-width="0.55" opacity="0.45"/>
+        <line x1="84" y1="106" x2="336" y2="106" stroke="#ceb79a" stroke-width="0.55" opacity="0.35"/>
+        <line x1="84" y1="126" x2="336" y2="126" stroke="#ceb79a" stroke-width="0.55" opacity="0.32"/>
+        <text x="210" y="94" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="19" fill="#8b2a1d" font-style="italic">You are cordially invited</text>
+        <text x="210" y="119" text-anchor="middle" font-family="Playfair Display SC, serif" font-size="10.5" fill="#735847" letter-spacing="2.2">to the wedding of</text>
+        <text x="210" y="152" text-anchor="middle" font-family="Alex Brush, cursive" font-size="27" fill="#2f1b12">Cynthia &amp; Austin</text>
+        <line x1="126" y1="168" x2="294" y2="168" stroke="#af7c34" stroke-width="0.85" opacity="0.65"/>
+        <text x="210" y="189" text-anchor="middle" font-family="Playfair Display SC, serif" font-size="9.4" fill="#614837" letter-spacing="3.2">FEBRUARY 27, 2027</text>
+      </g>
+
+      <g id="envFront">
+        <!-- left triangle -->
+        <polygon class="env-side-l" points="20,80 210,185 20,280"/>
+        <polygon class="env-paper-overlay" points="20,80 210,185 20,280"/>
+        <!-- right triangle -->
+        <polygon class="env-side-r" points="400,80 210,185 400,280"/>
+        <polygon class="env-paper-overlay" points="400,80 210,185 400,280"/>
+        <!-- bottom triangle -->
+        <polygon class="env-bottom" points="20,280 210,185 400,280"/>
+        <polygon class="env-paper-overlay" points="20,280 210,185 400,280"/>
+
+        <!-- inner envelope lines for depth -->
+        <line x1="20" y1="80" x2="210" y2="185" stroke="rgba(57,30,19,0.24)" stroke-width="1.1"/>
+        <line x1="400" y1="80" x2="210" y2="185" stroke="rgba(57,30,19,0.24)" stroke-width="1.1"/>
+
+      </g>
+
+      <!-- top flap + attached seal (folds as one piece) -->
+      <g class="flap-group flap-front-layer" id="envFlapFrontGroup">
+        <polygon class="env-flap" id="envFlap" points="20,80 210,185 400,80"/>
+        <polygon class="env-paper-overlay" points="20,80 210,185 400,80"/>
+        <g class="seal-group" id="sealGroup">
+          <circle cx="210" cy="185" r="24" fill="#8a1c1c"/>
+          <image class="seal-img" href="img/wax-seal.png" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
+          <text class="seal-monogram" x="210" y="186">C&amp;A</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <p class="env-hint">Tap to open your invitation</p>
+</div>
+
+<!-- ═══════════════════════════════════
+     HERO / VENUE SECTION
+═══════════════════════════════════ -->
+<div id="hero">
+  <div class="hero-parallax" aria-hidden="true">
+    <div class="hero-layer sky" id="pl-sky"></div>
+    <div class="hero-layer church" id="pl-church"></div>
+    <div class="hero-layer arch-left" id="pl-arch-left">
+      <div class="arch-inner"></div>
+    </div>
+    <div class="hero-layer arch-right" id="pl-arch-right">
+      <div class="arch-inner"></div>
+    </div>
+    <div class="hero-layer bushes" id="pl-bushes"></div>
+  </div>
+  <div class="hero-overlay"></div>
+  <canvas id="petalCanvas"></canvas>
+  <canvas id="bloomCanvas"></canvas>
+
+  <div class="hero-content" id="pl-hero-content">
+    <p class="hero-eyebrow hero-copy-fade">You are cordially invited to</p>
+    <span class="hero-wedding-of hero-copy-fade">The Wedding of</span>
+    <h1 class="hero-names script">
+      <span id="name-cynthia"></span>
+      <span class="hero-ampersand" id="name-ampersand"></span>
+      <span id="name-austin"></span>
+    </h1>
+    <p class="hero-date fancy hero-copy-fade">Saturday, February 27th, 2027</p>
+    <p class="hero-location caps hero-copy-fade">Santa Barbara, California</p>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll to continue</span>
+    <div class="scroll-chevrons">
+      <i></i><i></i><i></i>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     ACCOMMODATIONS
+═══════════════════════════════════ -->
+<div class="section-bg-ivory">
+  <div class="section" id="sec-accomm">
+    <div class="section-sep">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy">Accommodations</h2>
+    <p class="section-sub">Where to rest your head</p>
+    <p class="accomm-text fancy">
+      We have curated a selection of nearby hotels to make your stay as comfortable and memorable as possible.
+      From luxurious retreats to charming boutique options, there is something for every guest.
+    </p>
+    <a href="hotels.html" class="btn-primary">View Recommended Hotels</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     VENUE / MAP
+═══════════════════════════════════ -->
+<div class="section-bg-ivory-dark">
+  <div class="section" id="sec-venue">
+    <div class="section-sep">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy">Ceremony &amp; Reception Venues</h2>
+    <p class="section-sub">Find your way to us</p>
+    <div class="venue-details">
+      <p class="venue-name fancy">Ceremony ~ Trinity Episcopal Church</p>
+      <p class="venue-addr">1500 State St, Santa Barbara, CA</p>
+      <p class="venue-name fancy" style="margin-top:1rem">Reception ~ El Paseo Restaurant</p>
+      <p class="venue-addr">813 Anacapa St, Santa Barbara, CA</p>
+    </div>
+    <div class="map-tabs">
+      <button class="map-tab active" onclick="switchMapTab('wedding', this)">Ceremony</button>
+      <button class="map-tab" onclick="switchMapTab('reception', this)">Reception</button>
+    </div>
+
+    <div id="map-wedding" class="map-frame-wrap active" title="Google Map of Trinity Episcopal Church">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3106.3457917521864!2d-119.70654053176312!3d34.425271484346574!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80e914889b2cf9dd%3A0xf6d0e25843e2e6e3!2sTrinity%20Episcopal%20Church!5e0!3m2!1sen!2sus!4v1772444078360!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+    <div id="map-reception" class="map-frame-wrap" title="Google Map of El Paseo Restaurant">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4654.400933571741!2d-119.70137990620107!3d34.422736718076784!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80e914792568f3cb%3A0xf7fc42c2808e0523!2sEl%20Paseo%20Restaurant!5e0!3m2!1sen!2sus!4v1772444115865!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+    <div class="parking-list">
+      <p class="section-sub">Nearby Parking</p>
+      <div class="parking-item">
+        <div>
+          <div class="parking-name">Parking Lot #6 (Granada Garage)</div>
+          <div class="parking-addr">1221 Anacapa St, Santa Barbara, CA</div>
+        </div>
+        <a class="parking-link" href="https://www.google.com/maps/dir/?api=1&destination=City+of+Santa+Barbara+Downtown+Parking+Lot+%236+(Granada+Garage),Santa+Barbara,CA" target="_blank">Directions →</a>
+      </div>
+      <div class="parking-item">
+        <div>
+          <div class="parking-name">Parking Lot #5</div>
+          <div class="parking-addr">1230 Chapala St, Santa Barbara, CA</div>
+        </div>
+        <a class="parking-link" href="https://www.google.com/maps/dir/?api=1&destination=Public+Parking+Lot+5,Santa+Barbara,CA" target="_blank">Directions →</a>
+      </div>
+      <div class="parking-item">
+        <div>
+          <div class="parking-name">Parking Lot #7 (Library Garage)</div>
+          <div class="parking-addr">1115 Anacapa St, Santa Barbara, CA</div>
+        </div>
+        <a class="parking-link" href="https://www.google.com/maps/dir/?api=1&destination=City+of+Santa+Barbara+Downtown+Parking+Lot+%237+(Library+Garage),Santa+Barbara,CA" target="_blank">Directions →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     ITINERARY
+═══════════════════════════════════ -->
+<div class="section-bg-ivory">
+  <div class="section" id="sec-itinerary">
+    <div class="section-sep">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy">The Day</h2>
+    <p class="section-sub">Our celebration itinerary</p>
+
+    <div class="timeline" id="timeline">
+      <div class="tl-item">
+        <div class="tl-dot">🚪</div>
+        <p class="tl-time">3:00 PM</p>
+        <p class="tl-event fancy">Doors Open</p>
+        <p class="tl-desc">Guests are welcomed and seated in the chapel.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">💍</div>
+        <p class="tl-time">4:00 PM</p>
+        <p class="tl-event fancy">Wedding Ceremony</p>
+        <p class="tl-desc">Exchange of vows inside the chapel.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">📸</div>
+        <p class="tl-time">4:30 PM</p>
+        <p class="tl-event fancy">Group Photography</p>
+        <p class="tl-desc">Portraits with the couple and family groups.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">🍽️</div>
+        <p class="tl-time">5:00 PM</p>
+        <p class="tl-event fancy">Wedding Dinner</p>
+        <p class="tl-desc">A Mexican banquet held at El Paseo Restaurant.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">🥂</div>
+        <p class="tl-time">5:30 PM - 10:00 PM</p>
+        <p class="tl-event fancy">Open Bar</p>
+        <p class="tl-desc">Alcoholic and non-alcoholic drinks are available.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">🎂</div>
+        <p class="tl-time">7:00 PM</p>
+        <p class="tl-event fancy">Cake Cutting & Dessert Table</p>
+        <p class="tl-desc">Speeches and the ceremonial cutting of the wedding cake.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">💃</div>
+        <p class="tl-time">7:30 PM - 10:00 PM</p>
+        <p class="tl-event fancy">Dancing & Celebration</p>
+        <p class="tl-desc">Take to the dance floor and dance the night away!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     DINNER MENU
+═══════════════════════════════════ -->
+<div class="section-bg-ivory-dark">
+  <div class="section" id="sec-menu">
+    <div class="section-sep">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy">Dinner Menu</h2>
+    <p class="section-sub">El Paseo Restaurant</p>
+
+    <div class="menu-wrap">
+      <div class="menu-block">
+        <p class="menu-block-title">Appetizers</p>
+        <ul class="menu-list">
+          <li class="menu-item"><strong>Baked Puff Pastry</strong> — filled with vegetables &amp; cheese empanadas with pesto aioli</li>
+          <li class="menu-item"><strong>Shrimp Ceviche Tostaditos</strong> — with avocado sauce</li>
+          <li class="menu-item"><strong>Italian Sausage Mozzarella Cheese</strong> — in a mushroom cup with herb-mascarpone</li>
+          <li class="menu-item"><strong>Filet Mignon Satay</strong> — with chimichurri sauce</li>
+        </ul>
+      </div>
+
+      <div class="menu-block">
+        <p class="menu-block-title">Salad</p>
+        <ul class="menu-list">
+          <li class="menu-item"><strong>Crazy Caesar Salad</strong> — Romaine lettuce, grilled white corn, avocado, crispy tortilla, tomato, black beans, cilantro, queso fresco, parmesan cheese with avocado - Caesar dressing</li>
+        </ul>
+      </div>
+
+      <div class="menu-block">
+        <p class="menu-block-title">Entrees</p>
+        <ul class="menu-list">
+          <li class="menu-item"><strong>Braised Pork Belly</strong> — with citrus chutney &amp; natural au jus</li>
+          <li class="menu-item"><strong>Penne Pasta</strong> — with grilled vegetables, tomato, cilantro in a chipotle cream sauce</li>
+          <li class="menu-item"><strong>Dungeness Crab and Shrimp Enchilada</strong> — tomatillo sauce &amp; cream</li>
+        </ul>
+      </div>
+
+      <div class="menu-block">
+        <p class="menu-block-title">Side Dish</p>
+        <ul class="menu-list">
+          <li class="menu-item"><strong>Sauté Vegetables</strong> — asparagus, baby carrot, french green beans, zucchini &amp; yellow squash</li>
+        </ul>
+      </div>
+    </div>
+    <p class="menu-note">Please tell the restaurant staff if you have any allergies.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     GIFTS
+═══════════════════════════════════ -->
+<div class="section-bg-ivory">
+  <div class="section" id="sec-gifts">
+    <div class="section-sep">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy">Gifts</h2>
+    <p class="section-sub">Your presence is our greatest gift</p>
+    <p class="gifts-text fancy">
+      Your love and company on our special day is truly the greatest gift of all. However, if you'd
+      like to contribute to our honeymoon it would be deeply appreciated.
+    </p>
+    <div class="radio-group" id="giftingGroup">
+      <a href="https://venmo.com/Austin-Tisor" class="btn-primary">Venmo</a>
+      <a href="https://paypal.me/austintisor" class="btn-primary">PayPal</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     RSVP
+═══════════════════════════════════ -->
+<div class="section-bg-dark">
+  <div class="section" id="sec-rsvp" style="color: var(--ivory)">
+    <div class="section-sep">
+      <div class="sep-line" style="background: linear-gradient(to right, transparent, rgba(250,246,240,0.3), transparent)"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line" style="background: linear-gradient(to right, transparent, rgba(250,246,240,0.3), transparent)"></div>
+    </div>
+    <h2 class="section-title fancy" id="rsvp-title">RSVP</h2>
+    <p class="rsvp-deadline fancy" style="color: #f0c060;">Kindly respond by September 1st, 2026</p>
+
+    <form class="rsvp-form" id="rsvpForm" onsubmit="submitRSVP(event); return false;">
+
+      <!-- Number of guests -->
+      <div class="form-group">
+        <label class="form-label">
+          Number of Guests Attending
+          <span class="form-note">All guests must be on the official guest list to be seated.</span>
+        </label>
+        <div class="stepper">
+          <button type="button" onclick="changeGuests(-1)">−</button>
+          <input type="number" id="guestCount" value="1" min="1" max="6" readonly>
+          <button type="button" onclick="changeGuests(1)">+</button>
+        </div>
+      </div>
+
+      <!-- Dynamic name fields -->
+      <div class="form-group">
+        <label class="form-label">Full Name(s)</label>
+        <div id="name-fields"></div>
+      </div>
+
+      <!-- Accept / Decline -->
+      <div class="form-group">
+        <label class="form-label">Response</label>
+        <div class="radio-group" id="radioGroup">
+          <label class="radio-label" id="lbl-accept" onclick="selectRadio('accept')">
+            <input type="radio" name="rsvp" value="accept" id="r-accept">
+            <span class="radio-copy">✓ &nbsp;Accepts Gladly</span>
+          </label>
+          <label class="radio-label" id="lbl-decline" onclick="selectRadio('decline')">
+            <input type="radio" name="rsvp" value="decline" id="r-decline">
+            <span class="radio-copy">✗ &nbsp;Declines Regretfully</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label class="form-label">
+          Email Address
+          <span class="form-note">Optional — we'll send confirmation here.</span>
+        </label>
+        <input type="email" id="rsvpEmail" placeholder="your@email.com" autocomplete="email">
+      </div>
+
+      <!-- Message -->
+      <div class="form-group">
+        <label class="form-label">
+          Message to the Couple
+          <span class="form-note">Optional — share your well-wishes.</span>
+        </label>
+        <textarea id="rsvpMessage" placeholder="We are so looking forward to celebrating with you..."></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit">Send My RSVP</button>
+    </form>
+
+    <div id="rsvp-success">
+      <div class="check">🌹</div>
+      <h3 class="fancy">Thank you!</h3>
+      <p>Your RSVP has been received. We can't wait to celebrate with you.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Cynthia &amp; Austin &nbsp;·&nbsp; February 27, 2027 &nbsp;·&nbsp; Santa Barbara, California</p>
+</footer>
+
+<div class="language-toggle" id="language-toggle" role="group" aria-label="Language selector">
+  <button type="button" class="language-toggle-option" data-lang="en" aria-pressed="true">EN</button>
+  <button type="button" class="language-toggle-option" data-lang="es" aria-pressed="false">ES</button>
+</div>
+
+<script>
+const returningFromHotels = new URLSearchParams(window.location.search).get('from') === 'hotels';
+
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+window.addEventListener('load', () => {
+  if (returningFromHotels) {
+    document.getElementById('sec-accomm')?.scrollIntoView({ behavior: 'instant' });
+  } else {
+    window.scrollTo(0, 0);
+  }
+});
+window.addEventListener('pageshow', () => {
+  if (!returningFromHotels) window.scrollTo(0, 0);
+});
+
+// ─────────────────────────────────────
+// LANGUAGE TOGGLE (EN/ES)
+// ─────────────────────────────────────
+const LANGUAGE_STORAGE_KEY = 'preferredLanguage';
+let currentLanguage = 'en';
+let rsvpSubmitting = false;
+
+const I18N_INDEX = {
+  en: {
+    languageSelectorLabel: 'Language selector',
+    title: 'The Wedding of Cynthia & Austin',
+    envHint: 'Tap to open your invitation',
+    envCardLine1: 'You are cordially invited',
+    envCardLine2: 'to the wedding of',
+    heroEyebrow: 'You are cordially invited to',
+    heroWeddingOf: 'The Wedding of',
+    heroDate: 'Saturday, February 27th, 2027',
+    heroLocation: 'Santa Barbara, California',
+    scrollHint: 'Scroll to continue',
+    accommodationsTitle: 'Accommodations',
+    accommodationsSub: 'Where to rest your head',
+    accommodationsText: 'We have curated a selection of nearby hotels to make your stay as comfortable and memorable as possible. From luxurious retreats to charming boutique options, there is something for every guest.',
+    accommodationsCta: 'View Recommended Hotels',
+    venuesTitle: 'Ceremony & Reception Venues',
+    venuesSub: 'Find your way to us',
+    venueNames: ['Ceremony ~ Trinity Episcopal Church', 'Reception ~ El Paseo Restaurant'],
+    mapTabs: ['Ceremony', 'Reception'],
+    parkingSub: 'Nearby Parking',
+    parkingNames: ['Parking Lot #6 (Granada Garage)', 'Parking Lot #5', 'Parking Lot #7 (Library Garage)'],
+    parkingLink: 'Directions →',
+    dayTitle: 'The Day',
+    daySub: 'Our celebration itinerary',
+    timelineEvents: ['Doors Open', 'Wedding Ceremony', 'Group Photography', 'Wedding Dinner', 'Open Bar', 'Cake Cutting & Dessert Table', 'Dancing & Celebration'],
+    timelineDescs: [
+      'Guests are welcomed and seated in the chapel.',
+      'Exchange of vows inside the chapel.',
+      'Portraits with the couple and family groups.',
+      'A Mexican banquet held at El Paseo Restaurant.',
+      'Alcoholic and non-alcoholic drinks are available.',
+      'Speeches and the ceremonial cutting of the wedding cake.',
+      'Take to the dance floor and dance the night away!',
+    ],
+    menuTitle: 'Dinner Menu',
+    menuSub: 'El Paseo Restaurant',
+    menuBlocks: ['Appetizers', 'Salad', 'Entrees', 'Side Dish'],
+    menuItems: [
+      '<strong>Baked Puff Pastry</strong> — filled with vegetables &amp; cheese empanadas with pesto aioli',
+      '<strong>Shrimp Ceviche Tostaditos</strong> — with avocado sauce',
+      '<strong>Italian Sausage Mozzarella Cheese</strong> — in a mushroom cup with herb-mascarpone',
+      '<strong>Filet Mignon Satay</strong> — with chimichurri sauce',
+      '<strong>Crazy Caesar Salad</strong> — Romaine lettuce, grilled white corn, avocado, crispy tortilla, tomato, black beans, cilantro, queso fresco, parmesan cheese with avocado - Caesar dressing',
+      '<strong>Braised Pork Belly</strong> — with citrus chutney &amp; natural au jus',
+      '<strong>Penne Pasta</strong> — with grilled vegetables, tomato, cilantro in a chipotle cream sauce',
+      '<strong>Dungeness Crab and Shrimp Enchilada</strong> — tomatillo sauce &amp; cream',
+      '<strong>Sauté Vegetables</strong> — asparagus, baby carrot, french green beans, zucchini &amp; yellow squash',
+    ],
+    menuNote: 'Please tell the restaurant staff if you have any allergies.',
+    giftsTitle: 'Gifts',
+    giftsSub: 'Your presence is our greatest gift',
+    giftsText: "Your love and company on our special day is truly the greatest gift of all. However, if you'd like to contribute to our honeymoon it would be deeply appreciated.",
+    rsvpTitle: 'RSVP',
+    rsvpDeadline: 'Kindly respond by September 1st, 2026',
+    rsvpGuestLabel: 'Number of Guests Attending',
+    rsvpGuestNote: 'All guests must be on the official guest list to be seated.',
+    rsvpNamesLabel: 'Full Name(s)',
+    rsvpResponseLabel: 'Response',
+    rsvpAccept: 'Accepts Gladly',
+    rsvpDecline: 'Declines Regretfully',
+    rsvpEmailLabel: 'Email Address',
+    rsvpEmailNote: "Optional — we'll send confirmation here.",
+    rsvpMessageLabel: 'Message to the Couple',
+    rsvpMessageNote: 'Optional — share your well-wishes.',
+    rsvpEmailPlaceholder: 'your@email.com',
+    rsvpMessagePlaceholder: 'We are so looking forward to celebrating with you...',
+    rsvpSubmit: 'Send My RSVP',
+    rsvpSending: 'Sending…',
+    rsvpSuccessTitle: 'Thank you!',
+    rsvpSuccessText: "Your RSVP has been received. We can't wait to celebrate with you.",
+    footer: 'Cynthia & Austin · February 27, 2027 · Santa Barbara, California',
+    guestPlaceholder: 'Guest {n} full name',
+    selectResponseAlert: 'Please select Accept or Decline.',
+    submitErrorAlert: 'Something went wrong. Please try again or contact us directly.',
+  },
+  es: {
+    languageSelectorLabel: 'Selector de idioma',
+    title: 'La boda de Cynthia y Austin',
+    envHint: 'Toca para abrir tu invitación',
+    envCardLine1: 'Estás cordialmente invitado(a)',
+    envCardLine2: 'a la boda de',
+    heroEyebrow: 'Estás cordialmente invitado(a) a',
+    heroWeddingOf: 'La boda de',
+    heroDate: 'Sábado, 27 de febrero de 2027',
+    heroLocation: 'Santa Bárbara, California',
+    scrollHint: 'Desliza para continuar',
+    accommodationsTitle: 'Hospedaje',
+    accommodationsSub: 'Dónde descansar',
+    accommodationsText: 'Hemos seleccionado una lista de hoteles cercanos para que tu estancia sea lo más cómoda y memorable posible. Desde retiros de lujo hasta opciones boutique con encanto, hay algo para cada invitado.',
+    accommodationsCta: 'Ver hoteles recomendados',
+    venuesTitle: 'Ceremonia y recepción',
+    venuesSub: 'Cómo llegar',
+    venueNames: ['Ceremonia ~ Iglesia Episcopal Trinity', 'Recepción ~ Restaurante El Paseo'],
+    mapTabs: ['Ceremonia', 'Recepción'],
+    parkingSub: 'Estacionamiento cercano',
+    parkingNames: ['Estacionamiento #6 (Garaje Granada)', 'Estacionamiento #5', 'Estacionamiento #7 (Garaje Library)'],
+    parkingLink: 'Cómo llegar →',
+    dayTitle: 'El día',
+    daySub: 'Itinerario de la celebración',
+    timelineEvents: ['Apertura de puertas', 'Ceremonia de boda', 'Fotografía grupal', 'Cena de boda', 'Barra libre', 'Corte del pastel y mesa de postres', 'Baile y celebración'],
+    timelineDescs: [
+      'Se da la bienvenida a los invitados y se les acomoda en la capilla.',
+      'Intercambio de votos dentro de la capilla.',
+      'Retratos con la pareja y grupos familiares.',
+      'Banquete mexicano en el Restaurante El Paseo.',
+      'Habrá bebidas alcohólicas y sin alcohol.',
+      'Discursos y corte ceremonial del pastel de boda.',
+      '¡Sal a la pista y baila toda la noche!',
+    ],
+    menuTitle: 'Menú de cena',
+    menuSub: 'Restaurante El Paseo',
+    menuBlocks: ['Entradas', 'Ensalada', 'Platos fuertes', 'Guarnición'],
+    menuItems: [
+      '<strong>Hojaldre horneado</strong> — empanaditas rellenas de vegetales y queso con alioli de pesto',
+      '<strong>Tostaditos de ceviche de camarón</strong> — con salsa de aguacate',
+      '<strong>Salchicha italiana con queso mozzarella</strong> — en copa de champiñón con mascarpone a las hierbas',
+      '<strong>Satay de filete mignon</strong> — con salsa chimichurri',
+      '<strong>Ensalada César especial</strong> — lechuga romana, elote blanco asado, aguacate, tortilla crujiente, tomate, frijol negro, cilantro, queso fresco y parmesano con aderezo César de aguacate',
+      '<strong>Panceta de cerdo braseada</strong> — con chutney cítrico y jugo natural',
+      '<strong>Pasta penne</strong> — con vegetales asados, tomate y cilantro en salsa cremosa de chipotle',
+      '<strong>Enchilada de cangrejo Dungeness y camarón</strong> — con salsa de tomatillo y crema',
+      '<strong>Vegetales salteados</strong> — espárragos, zanahoria baby, ejotes franceses, calabacita verde y amarilla',
+    ],
+    menuNote: 'Por favor, informa al personal del restaurante si tienes alguna alergia.',
+    giftsTitle: 'Regalos',
+    giftsSub: 'Tu presencia es nuestro mejor regalo',
+    giftsText: 'Tu amor y compañía en nuestro día especial es, de verdad, el regalo más grande. Sin embargo, si te gustaría contribuir a nuestra luna de miel, lo agradeceríamos profundamente.',
+    rsvpTitle: 'Confirmación',
+    rsvpDeadline: 'Por favor responde antes del 1 de septiembre de 2026',
+    rsvpGuestLabel: 'Número de invitados que asistirán',
+    rsvpGuestNote: 'Todos los invitados deben estar en la lista oficial para poder sentarse.',
+    rsvpNamesLabel: 'Nombre(s) completo(s)',
+    rsvpResponseLabel: 'Respuesta',
+    rsvpAccept: 'Acepta con gusto',
+    rsvpDecline: 'Declina con pesar',
+    rsvpEmailLabel: 'Correo electrónico',
+    rsvpEmailNote: 'Opcional — te enviaremos la confirmación aquí.',
+    rsvpMessageLabel: 'Mensaje para la pareja',
+    rsvpMessageNote: 'Opcional — comparte tus buenos deseos.',
+    rsvpEmailPlaceholder: 'tu@correo.com',
+    rsvpMessagePlaceholder: 'Tenemos muchas ganas de celebrar con ustedes...',
+    rsvpSubmit: 'Enviar confirmación',
+    rsvpSending: 'Enviando…',
+    rsvpSuccessTitle: '¡Gracias!',
+    rsvpSuccessText: 'Recibimos tu confirmación. Estamos emocionados por celebrar contigo.',
+    footer: 'Cynthia y Austin · 27 de febrero de 2027 · Santa Bárbara, California',
+    guestPlaceholder: 'Nombre completo del invitado {n}',
+    selectResponseAlert: 'Por favor selecciona Acepta o Declina.',
+    submitErrorAlert: 'Algo salió mal. Inténtalo de nuevo o contáctanos directamente.',
+  },
+};
+
+function setText(selector, value) {
+  const el = document.querySelector(selector);
+  if (el) el.textContent = value;
+}
+
+function applyIndexTranslations(lang) {
+  const copy = I18N_INDEX[lang] || I18N_INDEX.en;
+
+  document.title = copy.title;
+  setText('.env-hint', copy.envHint);
+  setText('.hero-eyebrow', copy.heroEyebrow);
+  setText('.hero-wedding-of', copy.heroWeddingOf);
+  setText('.hero-date', copy.heroDate);
+  setText('.hero-location', copy.heroLocation);
+  setText('.scroll-hint span', copy.scrollHint);
+
+  const envCardLines = document.querySelectorAll('#envLetter text');
+  if (envCardLines[0]) envCardLines[0].textContent = copy.envCardLine1;
+  if (envCardLines[1]) envCardLines[1].textContent = copy.envCardLine2;
+
+  setText('#sec-accomm .section-title', copy.accommodationsTitle);
+  setText('#sec-accomm .section-sub', copy.accommodationsSub);
+  setText('#sec-accomm .accomm-text', copy.accommodationsText);
+  setText('#sec-accomm .btn-primary', copy.accommodationsCta);
+
+  setText('#sec-venue .section-title', copy.venuesTitle);
+  setText('#sec-venue .section-sub', copy.venuesSub);
+  const venueNames = document.querySelectorAll('#sec-venue .venue-name');
+  venueNames.forEach((el, i) => { if (copy.venueNames[i]) el.textContent = copy.venueNames[i]; });
+  const mapTabs = document.querySelectorAll('#sec-venue .map-tab');
+  mapTabs.forEach((el, i) => { if (copy.mapTabs[i]) el.textContent = copy.mapTabs[i]; });
+  const parkingSub = document.querySelector('#sec-venue .parking-list .section-sub');
+  if (parkingSub) parkingSub.textContent = copy.parkingSub;
+  const parkingNames = document.querySelectorAll('#sec-venue .parking-name');
+  parkingNames.forEach((el, i) => { if (copy.parkingNames[i]) el.textContent = copy.parkingNames[i]; });
+  document.querySelectorAll('#sec-venue .parking-link').forEach((el) => { el.textContent = copy.parkingLink; });
+
+  setText('#sec-itinerary .section-title', copy.dayTitle);
+  setText('#sec-itinerary .section-sub', copy.daySub);
+  const timelineEvents = document.querySelectorAll('#sec-itinerary .tl-event');
+  timelineEvents.forEach((el, i) => { if (copy.timelineEvents[i]) el.textContent = copy.timelineEvents[i]; });
+  const timelineDescs = document.querySelectorAll('#sec-itinerary .tl-desc');
+  timelineDescs.forEach((el, i) => { if (copy.timelineDescs[i]) el.textContent = copy.timelineDescs[i]; });
+
+  setText('#sec-menu .section-title', copy.menuTitle);
+  setText('#sec-menu .section-sub', copy.menuSub);
+  const menuBlockTitles = document.querySelectorAll('#sec-menu .menu-block-title');
+  menuBlockTitles.forEach((el, i) => { if (copy.menuBlocks[i]) el.textContent = copy.menuBlocks[i]; });
+  const menuItems = document.querySelectorAll('#sec-menu .menu-item');
+  menuItems.forEach((el, i) => { if (copy.menuItems[i]) el.innerHTML = copy.menuItems[i]; });
+  setText('#sec-menu .menu-note', copy.menuNote);
+
+  setText('#sec-gifts .section-title', copy.giftsTitle);
+  setText('#sec-gifts .section-sub', copy.giftsSub);
+  setText('#sec-gifts .gifts-text', copy.giftsText);
+
+  setText('#sec-rsvp #rsvp-title', copy.rsvpTitle);
+  setText('#sec-rsvp .rsvp-deadline', copy.rsvpDeadline);
+  const formGroups = document.querySelectorAll('#rsvpForm .form-group');
+  if (formGroups[0]) {
+    const label = formGroups[0].querySelector('.form-label');
+    if (label) label.innerHTML = `${copy.rsvpGuestLabel}<span class="form-note">${copy.rsvpGuestNote}</span>`;
+  }
+  if (formGroups[1]) {
+    const label = formGroups[1].querySelector('.form-label');
+    if (label) label.textContent = copy.rsvpNamesLabel;
+  }
+  if (formGroups[2]) {
+    const label = formGroups[2].querySelector('.form-label');
+    if (label) label.textContent = copy.rsvpResponseLabel;
+  }
+  if (formGroups[3]) {
+    const label = formGroups[3].querySelector('.form-label');
+    if (label) label.innerHTML = `${copy.rsvpEmailLabel}<span class="form-note">${copy.rsvpEmailNote}</span>`;
+  }
+  if (formGroups[4]) {
+    const label = formGroups[4].querySelector('.form-label');
+    if (label) label.innerHTML = `${copy.rsvpMessageLabel}<span class="form-note">${copy.rsvpMessageNote}</span>`;
+  }
+
+  const acceptCopy = document.querySelector('#lbl-accept .radio-copy');
+  if (acceptCopy) acceptCopy.innerHTML = `✓ &nbsp;${copy.rsvpAccept}`;
+  const declineCopy = document.querySelector('#lbl-decline .radio-copy');
+  if (declineCopy) declineCopy.innerHTML = `✗ &nbsp;${copy.rsvpDecline}`;
+
+  const email = document.getElementById('rsvpEmail');
+  if (email) email.placeholder = copy.rsvpEmailPlaceholder;
+  const message = document.getElementById('rsvpMessage');
+  if (message) message.placeholder = copy.rsvpMessagePlaceholder;
+  const submitBtn = document.querySelector('.btn-submit');
+  if (submitBtn) submitBtn.textContent = rsvpSubmitting ? copy.rsvpSending : copy.rsvpSubmit;
+  setText('#rsvp-success h3', copy.rsvpSuccessTitle);
+  setText('#rsvp-success p', copy.rsvpSuccessText);
+
+  const footerText = document.querySelector('footer p');
+  if (footerText) footerText.textContent = copy.footer;
+}
+
+function applyLanguage(lang) {
+  const normalized = lang === 'es' ? 'es' : 'en';
+  const toggle = document.getElementById('language-toggle');
+
+  currentLanguage = normalized;
+  document.documentElement.lang = normalized;
+  document.documentElement.dataset.language = normalized;
+
+  applyIndexTranslations(normalized);
+  const guestCount = parseInt(document.getElementById('guestCount')?.value || '1', 10);
+  renderNameFields(Number.isNaN(guestCount) ? 1 : guestCount);
+
+  if (!toggle) return;
+  toggle.setAttribute('aria-label', (I18N_INDEX[normalized] || I18N_INDEX.en).languageSelectorLabel);
+
+  const options = toggle.querySelectorAll('.language-toggle-option');
+  options.forEach((option) => {
+    const isActive = option.dataset.lang === normalized;
+    option.classList.toggle('active', isActive);
+    option.setAttribute('aria-pressed', String(isActive));
+  });
+
+  document.querySelectorAll('a[href]').forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('http') || href.startsWith('#')) return;
+    const [base, query] = href.split('?');
+    const params = new URLSearchParams(query || '');
+    if (normalized === 'es') { params.set('lang', 'es'); } else { params.delete('lang'); }
+    const qs = params.toString();
+    link.href = qs ? `${base}?${qs}` : base;
+  });
+}
+
+function initLanguageToggle() {
+  const toggle = document.getElementById('language-toggle');
+  let startingLanguage = 'en';
+
+  try {
+    const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (savedLanguage === 'es') startingLanguage = 'es';
+  } catch (err) {
+    console.warn('Language preference could not be read from localStorage.', err);
+  }
+
+  const urlLang = new URLSearchParams(window.location.search).get('lang');
+  if (urlLang === 'es') {
+    startingLanguage = 'es';
+    try { localStorage.setItem(LANGUAGE_STORAGE_KEY, 'es'); } catch (_) {}
+  } else if (urlLang === 'en') {
+    startingLanguage = 'en';
+    try { localStorage.setItem(LANGUAGE_STORAGE_KEY, 'en'); } catch (_) {}
+  }
+
+  applyLanguage(startingLanguage);
+  if (!toggle) return;
+
+  toggle.addEventListener('click', (event) => {
+    const option = event.target.closest('.language-toggle-option');
+    if (!option) return;
+
+    const nextLanguage = option.dataset.lang === 'es' ? 'es' : 'en';
+    applyLanguage(nextLanguage);
+    try {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+    } catch (err) {
+      console.warn('Language preference could not be saved to localStorage.', err);
+    }
+  });
+}
+
+initLanguageToggle();
+
+// ─────────────────────────────────────
+// HERO LETTERING REVEAL
+// ─────────────────────────────────────
+function buildLetterSpans(containerId, text) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  [...text].forEach((char) => {
+    const span = document.createElement('span');
+    span.className = 'letter-span';
+    span.textContent = char === ' ' ? '\u00A0' : char;
+    el.appendChild(span);
+  });
+}
+
+function revealLetters(containerId, startDelay) {
+  const letters = document.getElementById(containerId)?.querySelectorAll('.letter-span') || [];
+  letters.forEach((letter, index) => {
+    setTimeout(() => {
+      letter.classList.add('revealed');
+    }, startDelay + (index * 55));
+  });
+}
+
+buildLetterSpans('name-cynthia', 'Cynthia');
+buildLetterSpans('name-ampersand', '&');
+buildLetterSpans('name-austin', 'Austin');
+
+// ─────────────────────────────────────
+// HERO PARALLAX
+// ─────────────────────────────────────
+(function () {
+  const LAYERS = [
+    { el: null, id: 'pl-sky', scrollMult: -0.12, entranceY: -18, entranceScale: 1.18 },
+    { el: null, id: 'pl-church', scrollMult: -0.24, entranceY: -44, entranceScale: 1.34 },
+    { el: null, id: 'pl-arch-left', scrollMult: -0.34, closedXSign: 1, entranceY: -16, startScale: 0.94, entranceScale: 1.144, isArch: true },
+    { el: null, id: 'pl-arch-right', scrollMult: -0.34, closedXSign: -1, entranceY: -16, startScale: 0.94, entranceScale: 1.144, isArch: true },
+    { el: null, id: 'pl-bushes', scrollMult: -0.75, entranceScale: 2.05 },
+  ];
+  const HERO_CONTENT = {
+    el: null,
+    id: 'pl-hero-content',
+    scrollMult: -0.22,
+    entranceY: -12,
+  };
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  const ENTRANCE_DURATION = 2600;
+  const MAX_SCENE_SCROLL_Y = 180;
+  let entranceStart = null;
+  let entranceDone = false;
+  let raf = null;
+  let paused = false;
+  let initialized = false;
+
+  function getScrollY() {
+    return window.scrollY || window.pageYOffset || 0;
+  }
+
+  function getArchClosedX(sign) {
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const magnitude = Math.max(66, Math.min(190, viewportWidth * 0.09));
+    return magnitude * sign;
+  }
+
+  function getBushEntranceY() {
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const magnitude = Math.max(8, Math.min(18, 22 - (viewportWidth * 0.015)));
+    return magnitude;
+  }
+
+  function tick(ts) {
+    if (!entranceStart) entranceStart = ts;
+    const elapsed = ts - entranceStart;
+    const t = entranceDone ? 1 : Math.min(1, elapsed / ENTRANCE_DURATION);
+    const te = easeOutCubic(t);
+
+    if (t >= 1) entranceDone = true;
+
+    const scrollY = Math.min(getScrollY(), MAX_SCENE_SCROLL_Y);
+
+    LAYERS.forEach((layer) => {
+      if (!layer.el) return;
+
+      if (layer.isArch) {
+        const closedX = getArchClosedX(layer.closedXSign || 0) * (1 - te);
+        const baseY = (layer.entranceY || 0) * te;
+        const startScale = layer.startScale || 1;
+        const endScale = layer.entranceScale || 1;
+        const baseS = startScale + ((endScale - startScale) * te);
+        const scrollDriftY = scrollY * layer.scrollMult;
+        layer.el.style.transform =
+          `translateX(${closedX}px) translateY(${baseY + scrollDriftY}px) scale(${baseS}) translateZ(0)`;
+      } else {
+        const entranceY = layer.id === 'pl-bushes' ? getBushEntranceY() : (layer.entranceY || 0);
+        const baseY = entranceY * te;
+        const baseS = 1 + ((layer.entranceScale || 1) - 1) * te;
+        const scrollYOffset = scrollY * layer.scrollMult;
+        layer.el.style.transform =
+          `translateY(${baseY + scrollYOffset}px) scale(${baseS}) translateZ(0)`;
+      }
+    });
+
+    if (HERO_CONTENT.el) {
+      const contentY = (HERO_CONTENT.entranceY * te) + (scrollY * HERO_CONTENT.scrollMult);
+      HERO_CONTENT.el.style.transform = `translateY(${contentY}px) translateZ(0)`;
+    }
+
+    raf = requestAnimationFrame(tick);
+  }
+
+  function resume() {
+    if (paused) {
+      paused = false;
+      raf = requestAnimationFrame(tick);
+    }
+  }
+
+  function pause() {
+    if (!paused) {
+      paused = true;
+      cancelAnimationFrame(raf);
+    }
+  }
+
+  window.initHeroParallax = function () {
+    if (initialized) return;
+    initialized = true;
+
+    LAYERS.forEach((layer) => {
+      layer.el = document.getElementById(layer.id);
+    });
+    HERO_CONTENT.el = document.getElementById(HERO_CONTENT.id);
+
+    raf = requestAnimationFrame(tick);
+
+    const heroEl = document.getElementById('hero');
+    if (!heroEl) return;
+
+    const obs = new IntersectionObserver((entries) => {
+      entries[0].isIntersecting ? resume() : pause();
+    }, { threshold: 0 });
+    obs.observe(heroEl);
+  };
+})();
+
+// ─────────────────────────────────────
+// ENVELOPE OPEN
+// ─────────────────────────────────────
+let envelopeOpened = false;
+function openEnvelope() {
+  if (envelopeOpened) return;
+  envelopeOpened = true;
+
+  const envWrap = document.getElementById('envWrap');
+  const flapFrontGroup = document.getElementById('envFlapFrontGroup');
+  const flapBackGroup = document.getElementById('envFlapBackGroup');
+  const letter = document.getElementById('envLetter');
+  const screen = document.getElementById('envelope-screen');
+  const hero = document.getElementById('hero');
+
+  // 1. Flap folds up with seal still attached
+  flapFrontGroup.classList.add('open');
+  flapBackGroup.classList.add('open');
+
+  // 2. At the 90-degree fold point, swap to the back flap layer and
+  // start pulling the letter out from the pocket.
+  setTimeout(() => {
+    if (envWrap && letter) {
+      envWrap.classList.add('past-fold');
+    }
+  }, 2230);
+
+  setTimeout(() => {
+    if (letter) {
+      letter.removeAttribute('clip-path');
+      letter.classList.add('open');
+    }
+  }, 2530);
+
+  // 3. Fade envelope screen, reveal hero
+  setTimeout(() => {
+    screen.classList.add('hide');
+    hero.classList.add('visible');
+    initHeroParallax();
+    startGoldenMotes();
+    revealLetters('name-cynthia', 250);
+    revealLetters('name-ampersand', 650);
+    revealLetters('name-austin', 820);
+  }, 3900);
+
+  // 4. Start rose bloom sprites once the hero has settled
+  setTimeout(() => { startRoseBlooms(); }, 5900);
+}
+
+// ─────────────────────────────────────
+// GOLDEN MOTES
+// ─────────────────────────────────────
+function startGoldenMotes() {
+  const canvas = document.getElementById('petalCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, motes = [], raf;
+  let isRunning = false;
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    motes = createMotes();
+  }
+  window.addEventListener('resize', resize);
+
+  function createMote() {
+    const edgeBias = Math.random();
+    let x;
+    let y;
+
+    if (edgeBias < 0.35) {
+      x = Math.random() * W * 0.18;
+      y = Math.random() * H;
+    } else if (edgeBias < 0.7) {
+      x = W - (Math.random() * W * 0.18);
+      y = Math.random() * H;
+    } else {
+      x = Math.random() * W;
+      y = H * 0.62 + (Math.random() * H * 0.3);
+    }
+
+    return {
+      x,
+      y,
+      r: 0.24 + Math.random() * 0.78,
+      vx: (-0.05 + Math.random() * 0.1) * 0.1,
+      vy: (-0.04 - Math.random() * 0.16) * 0.1,
+      twinkleSpeed: 0.0008 + Math.random() * 0.002,
+      twinkleOffset: Math.random() * Math.PI * 2,
+    };
+  }
+
+  function createMotes() {
+    const count = Math.max(24, Math.round((W * H) / 42000));
+    return Array.from({ length: count }, createMote);
+  }
+
+  resize();
+
+  function drawMote(mote, ts) {
+    const alpha = 0.5 + ((Math.sin((ts * mote.twinkleSpeed) + mote.twinkleOffset) + 1) * 0.25);
+    const gradient = ctx.createRadialGradient(mote.x, mote.y, 0, mote.x, mote.y, mote.r * 4.5);
+    gradient.addColorStop(0, `rgba(255, 245, 214, ${alpha})`);
+    gradient.addColorStop(0.35, `rgba(236, 206, 130, ${alpha * 0.55})`);
+    gradient.addColorStop(1, 'rgba(201, 168, 76, 0)');
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(mote.x, mote.y, mote.r * 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function stepMote(mote, dt) {
+    mote.x += mote.vx * dt;
+    mote.y += mote.vy * dt;
+
+    if (mote.y < -24 || mote.x < -24 || mote.x > W + 24) {
+      Object.assign(mote, createMote(), { y: H + (Math.random() * H * 0.18) });
+    }
+  }
+
+  let prevTs = 0;
+  function animate(ts) {
+    ctx.clearRect(0, 0, W, H);
+    const dt = prevTs ? Math.min(40, ts - prevTs) : 16;
+    prevTs = ts;
+
+    motes.forEach((mote) => {
+      stepMote(mote, dt);
+      drawMote(mote, ts);
+    });
+
+    raf = requestAnimationFrame(animate);
+  }
+  function startLoop() {
+    if (isRunning) return;
+    isRunning = true;
+    prevTs = 0;
+    raf = requestAnimationFrame(animate);
+  }
+  function stopLoop() {
+    if (!isRunning) return;
+    isRunning = false;
+    cancelAnimationFrame(raf);
+  }
+  startLoop();
+
+  const heroEl = document.getElementById('hero');
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) startLoop();
+    else stopLoop();
+  }, { threshold: 0 });
+  obs.observe(heroEl);
+}
+
+// ─────────────────────────────────────
+// ROSE BLOOM SPRITE ANIMATION
+// ─────────────────────────────────────
+function startRoseBlooms() {
+  const canvas = document.getElementById('bloomCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, blooms = [], raf;
+
+  const sheet = new Image();
+  sheet.src = 'img/rose-blooming-1-edit.png';
+
+  // Sprite-sheet layout: 6 columns x 2 rows.
+  const COLS = 6;
+  const ROWS = 2;
+  const TOTAL_FRAMES = COLS * ROWS;
+  const FPS = 9;
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function updateScroll() {
+    const scrollY = Math.min(window.scrollY || 0, 180);
+    canvas.style.transform = `translateY(${scrollY * -0.75}px) translateZ(0)`;
+  }
+  window.addEventListener('scroll', updateScroll, { passive: true });
+  updateScroll();
+
+  // Blooms spawn along the bottom 10% band only.
+  function makeBloom() {
+    if (!sheet.complete || !sheet.naturalWidth) return null;
+    const frameW = sheet.naturalWidth / COLS;
+    const frameH = sheet.naturalHeight / ROWS;
+    const overlapPad = 8;
+    const maxAttempts = 50;
+
+    function intersects(candidate) {
+      return blooms.some((b) => {
+        const leftA   = candidate.x - candidate.drawW / 2 - overlapPad;
+        const rightA  = candidate.x + candidate.drawW / 2 + overlapPad;
+        const topA    = candidate.y - candidate.drawH / 2 - overlapPad;
+        const bottomA = candidate.y + candidate.drawH / 2 + overlapPad;
+        const leftB   = b.x - b.drawW / 2 - overlapPad;
+        const rightB  = b.x + b.drawW / 2 + overlapPad;
+        const topB    = b.y - b.drawH / 2 - overlapPad;
+        const bottomB = b.y + b.drawH / 2 + overlapPad;
+        return leftA < rightB && rightA > leftB && topA < bottomB && bottomA > topB;
+      });
+    }
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const scale = (0.55 + Math.random() * 0.35) * 0.5;
+      const drawW = frameW * scale;
+      const drawH = frameH * scale;
+      const halfW = drawW / 2;
+      const halfH = drawH / 2;
+
+      let xMin = halfW, xMax = W - halfW;
+      let yMin = Math.max(halfH, H * 0.9), yMax = H - halfH;
+
+      if (xMin > xMax || yMin > yMax) continue;
+
+      const candidate = {
+        x: xMin + Math.random() * (xMax - xMin),
+        y: yMin + Math.random() * (yMax - yMin),
+        drawW, drawH, scale,
+        startMs: 0,
+        frameOffset: Math.floor(Math.random() * 5),
+        finished: false,
+        rotation: (Math.random() * 10 - 5) * Math.PI / 180,
+        mirrorX: blooms.length % 2 === 1,
+      };
+
+      if (!intersects(candidate)) return candidate;
+    }
+    return null;
+  }
+
+  // Seed a few blooms before the loop starts (sheet may not be loaded yet;
+  // makeBloom guards against that and returns null safely).
+  sheet.onload = () => {
+    for (let i = 0; i < 6; i++) {
+      const b = makeBloom();
+      if (b) blooms.push(b);
+    }
+  };
+
+  function drawBloom(b) {
+    const frameW = sheet.naturalWidth / COLS;
+    const frameH = sheet.naturalHeight / ROWS;
+    const elapsed = performance.now() - b.startMs;
+    let frame = Math.min(
+      TOTAL_FRAMES - 1,
+      Math.floor((elapsed / 1000) * FPS) + b.frameOffset
+    );
+    if (frame >= TOTAL_FRAMES - 1) { frame = TOTAL_FRAMES - 1; b.finished = true; }
+    const sx = (frame % COLS) * frameW;
+    const sy = Math.floor(frame / COLS) * frameH;
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rotation);
+    if (b.mirrorX) ctx.scale(-1, 1);
+    ctx.drawImage(sheet, sx, sy, frameW, frameH, -b.drawW / 2, -b.drawH / 2, b.drawW, b.drawH);
+    ctx.restore();
+  }
+
+  let lastSpawn = 0;
+  let startTs = 0;
+  let isRunning = false;
+
+  function animate(ts) {
+    ctx.clearRect(0, 0, W, H);
+    if (!startTs) startTs = ts;
+
+    if (ts - startTs <= 3000 && ts - lastSpawn > 350 && blooms.length < 32) {
+      const b = makeBloom();
+      if (b) { blooms.push(b); lastSpawn = ts; }
+    }
+
+    if (sheet.complete && sheet.naturalWidth) {
+      blooms.forEach((b) => {
+        if (!b.startMs) b.startMs = performance.now();
+        drawBloom(b);
+      });
+    }
+
+    raf = requestAnimationFrame(animate);
+  }
+
+  function startLoop() {
+    if (isRunning) return;
+    isRunning = true;
+    raf = requestAnimationFrame(animate);
+  }
+  function stopLoop() {
+    if (!isRunning) return;
+    isRunning = false;
+    cancelAnimationFrame(raf);
+  }
+  startLoop();
+
+  const heroEl = document.getElementById('hero');
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) startLoop();
+    else stopLoop();
+  }, { threshold: 0 });
+  obs.observe(heroEl);
+}
+
+// ─────────────────────────────────────
+// MAP TAB SWITCHER
+// ─────────────────────────────────────
+function switchMapTab(tab, btn) {
+  document.querySelectorAll('.map-frame-wrap').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.map-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('map-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─────────────────────────────────────
+// SCROLL REVEAL
+// ─────────────────────────────────────
+const revealEls = document.querySelectorAll('.section, .tl-item');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      // stagger timeline items
+      const delay = e.target.classList.contains('tl-item') ? 
+        Array.from(document.querySelectorAll('.tl-item')).indexOf(e.target) * 80 : 0;
+      setTimeout(() => e.target.classList.add('in-view'), delay);
+      revealObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObs.observe(el));
+
+// ─────────────────────────────────────
+// GUEST COUNT + DYNAMIC NAME FIELDS
+// ─────────────────────────────────────
+function changeGuests(delta) {
+  const input = document.getElementById('guestCount');
+  const val = Math.max(1, Math.min(6, parseInt(input.value) + delta));
+  input.value = val;
+  renderNameFields(val);
+}
+
+function renderNameFields(n) {
+  const container = document.getElementById('name-fields');
+  const copy = I18N_INDEX[currentLanguage] || I18N_INDEX.en;
+  container.innerHTML = '';
+  for (let i = 1; i <= n; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    const placeholder = copy.guestPlaceholder.replace('{n}', i);
+    row.innerHTML = `
+      <span class="person-num">${i}</span>
+      <input type="text" name="guest_name_${i}" placeholder="${placeholder}" required>
+    `;
+    container.appendChild(row);
+  }
+}
+const guestCountInput = document.getElementById('guestCount');
+if (guestCountInput) guestCountInput.value = 1;
+renderNameFields(1);
+
+// ─────────────────────────────────────
+// RADIO BUTTONS
+// ─────────────────────────────────────
+function selectRadio(val) {
+  document.getElementById('r-accept').checked = val === 'accept';
+  document.getElementById('r-decline').checked = val === 'decline';
+  document.getElementById('lbl-accept').className = 'radio-label' + (val === 'accept' ? ' selected-accept' : '');
+  document.getElementById('lbl-decline').className = 'radio-label' + (val === 'decline' ? ' selected-decline' : '');
+}
+
+// ─────────────────────────────────────
+// RSVP SUBMIT
+// ─────────────────────────────────────
+
+// !! Paste your Apps Script Web App URL here after deploying !!
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQxlWFp-B-g8b-Tn6DaGv0DASdEFyIoQBjW8D5PAaq6hROoGIUiNVFmqesOaQwUhL2/exec";
+
+async function submitRSVP(e) {
+  e.preventDefault();
+  const copy = I18N_INDEX[currentLanguage] || I18N_INDEX.en;
+
+  const resp = document.querySelector('input[name="rsvp"]:checked');
+  if (!resp) { alert(copy.selectResponseAlert); return; }
+
+  // Collect guest names
+  const count = parseInt(document.getElementById('guestCount').value);
+  const guestNames = [];
+  for (let i = 1; i <= count; i++) {
+    const f = document.querySelector(`input[name="guest_name_${i}"]`);
+    guestNames.push(f ? f.value.trim() : '');
+  }
+
+  const payload = {
+    response:   resp.value,
+    guestCount: count,
+    guestNames: guestNames,
+    email:      document.getElementById('rsvpEmail').value.trim(),
+    message:    document.getElementById('rsvpMessage').value.trim(),
+  };
+
+  // Show loading state
+  const btn = document.querySelector('.btn-submit');
+  rsvpSubmitting = true;
+  btn.textContent = copy.rsvpSending;
+  btn.disabled = true;
+
+  try {
+    // Apps Script requires no-cors due to CORS restrictions on Web Apps.
+    // We send the request and optimistically show success — the script
+    // will still write to the sheet even though we can't read the response.
+    await fetch(APPS_SCRIPT_URL, {
+      method:  'POST',
+      mode:    'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+
+    // Show success (optimistic — fetch with no-cors is fire-and-forget)
+    document.getElementById('rsvpForm').style.display = 'none';
+    document.getElementById('rsvp-success').style.display = 'block';
+
+  } catch (err) {
+    rsvpSubmitting = false;
+    btn.textContent = copy.rsvpSubmit;
+    btn.disabled = false;
+    alert(copy.submitErrorAlert);
+    console.error('RSVP submission error:', err);
+  }
+}
+
+// ─────────────────────────────────────
+// SKIP ENVELOPE (return from hotels)
+// ─────────────────────────────────────
+function skipEnvelopeInstantly() {
+  if (envelopeOpened) return;
+  envelopeOpened = true;
+
+  const envWrap   = document.getElementById('envWrap');
+  const flapFront = document.getElementById('envFlapFrontGroup');
+  const flapBack  = document.getElementById('envFlapBackGroup');
+  const letter    = document.getElementById('envLetter');
+  const screen    = document.getElementById('envelope-screen');
+  const hero      = document.getElementById('hero');
+
+  // Suppress transitions so state changes are instant
+  [envWrap, flapFront, flapBack, letter].forEach(el => {
+    if (el) el.style.transition = 'none';
+  });
+  if (screen) { screen.style.transition = 'none'; screen.style.opacity = '0'; screen.style.visibility = 'hidden'; screen.style.pointerEvents = 'none'; }
+  if (hero)   { hero.style.transition = 'none'; hero.classList.add('visible'); }
+
+  flapFront && flapFront.classList.add('open');
+  flapBack  && flapBack.classList.add('open');
+  envWrap   && envWrap.classList.add('past-fold');
+  if (letter) { letter.removeAttribute('clip-path'); letter.classList.add('open'); }
+
+  initHeroParallax();
+  startGoldenMotes();
+  revealLetters('name-cynthia', 0);
+  revealLetters('name-ampersand', 0);
+  revealLetters('name-austin', 0);
+  startRoseBlooms();
+}
+
+if (returningFromHotels) {
+  skipEnvelopeInstantly();
+  // Strip ?from=hotels so a page refresh restarts the envelope animation
+  const cleanUrl = new URL(window.location.href);
+  cleanUrl.searchParams.delete('from');
+  const qs = cleanUrl.searchParams.toString();
+  history.replaceState(null, '', cleanUrl.pathname + (qs ? '?' + qs : '') + cleanUrl.hash);
+}
+</script>
+</body>
+</html>

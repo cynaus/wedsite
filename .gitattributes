@@ -1,0 +1,23 @@
+# 1. Handle line endings automatically for all text files
+* text=auto
+
+# 2. Force specific line endings for web-specific files
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+
+# 3. Explicitly mark image assets as binary
+*.jpg  binary
+*.png  binary
+*.gif  binary
+*.ico  binary
+
+# 4. Tell GitHub to ignore vendored libraries in language stats
+vendor/** linguist-vendored
+node_modules/** linguist-vendored
+
+# 5. Exclude unnecessary files from production archives
+.gitignore export-ignore
+.gitattributes export-ignore
+tests/ export-ignore
