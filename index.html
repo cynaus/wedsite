@@ -646,11 +646,19 @@
       max-width: 560px; margin-left: auto; margin-right: auto;
     }
     #giftingGroup {
+      display: flex;
       justify-content: center;
+      align-items: center;
       gap: 0.5rem;
+      flex-wrap: wrap;
     }
     #giftingGroup .btn-primary {
       margin: 0;
+    }
+    @media (max-width: 480px) {
+      #giftingGroup {
+        flex-direction: row;
+      }
     }
 
     /* ══════════════════════════════════════
@@ -1524,10 +1532,18 @@ function applyIndexTranslations(lang) {
 function applyLanguage(lang) {
   const normalized = lang === 'es' ? 'es' : 'en';
   const toggle = document.getElementById('language-toggle');
+  const currentUrl = new URL(window.location.href);
 
   currentLanguage = normalized;
   document.documentElement.lang = normalized;
   document.documentElement.dataset.language = normalized;
+
+  if (normalized === 'es') {
+    currentUrl.searchParams.set('lang', 'es');
+  } else {
+    currentUrl.searchParams.delete('lang');
+  }
+  history.replaceState(null, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
 
   applyIndexTranslations(normalized);
   const guestCount = parseInt(document.getElementById('guestCount')?.value || '1', 10);
@@ -1923,9 +1939,14 @@ function startRoseBlooms() {
   resize();
   window.addEventListener('resize', resize);
 
+  let scrollRaf = null;
   function updateScroll() {
-    const scrollY = Math.min(window.scrollY || 0, 180);
-    canvas.style.transform = `translateY(${scrollY * -0.75}px) translateZ(0)`;
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = null;
+      const scrollY = Math.min(window.scrollY || 0, 180);
+      canvas.style.transform = `translateY(${scrollY * -0.75}px) translateZ(0)`;
+    });
   }
   window.addEventListener('scroll', updateScroll, { passive: true });
   updateScroll();
