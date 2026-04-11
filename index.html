@@ -167,7 +167,7 @@
       width: 100%; height: var(--hero-h, 100svh);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      overflow: hidden;
+      contain: paint;
       opacity: 0;
       transition: opacity 1.2s ease;
     }
@@ -1791,8 +1791,13 @@ buildLetterSpans('name-austin', 'Austin');
     if (!heroEl) return;
 
     const obs = new IntersectionObserver((entries) => {
-      entries[0].isIntersecting ? resume() : pause();
-    }, { threshold: 0 });
+      if (entries[0].isIntersecting) {
+        resume();
+        window.updateBloomScroll?.();
+      } else {
+        pause();
+      }
+    }, { threshold: 0, rootMargin: '150px' });
     obs.observe(heroEl);
   };
 })();
@@ -1989,6 +1994,7 @@ function startRoseBlooms() {
     });
   }
   window.addEventListener('scroll', updateScroll, { passive: true });
+  window.updateBloomScroll = updateScroll;
   updateScroll();
 
   // Blooms spawn along the bottom 10% band only.
