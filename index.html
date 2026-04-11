@@ -156,7 +156,7 @@
     ══════════════════════════════════════ */
     #hero {
       position: relative;
-      width: 100%; height: 100svh;
+      width: 100%; height: var(--hero-h, 100svh);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       overflow: hidden;
@@ -169,7 +169,6 @@
       position: absolute;
       inset: 0;
       z-index: 1;
-      overflow: hidden;
     }
 
     /* Each layer is oversized so JS parallax never exposes gaps. */
@@ -180,9 +179,11 @@
       left: -17.5%;
       top: -17.5%;
       background-repeat: no-repeat;
-      will-change: transform;
       transform: translateZ(0);
     }
+    /* Promote only the two fastest-moving layers to their own compositor tile. */
+    .hero-layer.bushes,
+    .hero-layer.church { will-change: transform; }
     .hero-layer.sky {
       background-image: url('img/sky-clouds.png');
       background-position: center top;
@@ -1260,6 +1261,10 @@
 </div>
 
 <script>
+// Lock the hero height to the initial inner height so iOS address-bar
+// show/hide (which changes svh) never triggers a relayout of the parallax.
+document.documentElement.style.setProperty('--hero-h', window.innerHeight + 'px');
+
 const returningFromHotels = new URLSearchParams(window.location.search).get('from') === 'hotels';
 
 if ('scrollRestoration' in history) {
@@ -1671,6 +1676,8 @@ buildLetterSpans('name-austin', 'Austin');
   let raf = null;
   let paused = false;
   let initialized = false;
+  let lastScrollY = -1;
+  let scrollDirty = false;
 
   function getScrollY() {
     return window.scrollY || window.pageYOffset || 0;
@@ -1697,6 +1704,15 @@ buildLetterSpans('name-austin', 'Austin');
     if (t >= 1) entranceDone = true;
 
     const scrollY = Math.min(getScrollY(), MAX_SCENE_SCROLL_Y);
+    const scrollChanged = scrollY !== lastScrollY;
+    lastScrollY = scrollY;
+    scrollDirty = false;
+
+    // Skip paint if entrance is done and scroll hasn't moved.
+    if (entranceDone && !scrollChanged) {
+      raf = null;
+      return;
+    }
 
     LAYERS.forEach((layer) => {
       if (!layer.el) return;
@@ -1709,36 +1725,40 @@ buildLetterSpans('name-austin', 'Austin');
         const baseS = startScale + ((endScale - startScale) * te);
         const scrollDriftY = scrollY * layer.scrollMult;
         layer.el.style.transform =
-          `translateX(${closedX}px) translateY(${baseY + scrollDriftY}px) scale(${baseS}) translateZ(0)`;
+          `translate3d(${closedX}px, ${baseY + scrollDriftY}px, 0) scale(${baseS})`;
       } else {
         const entranceY = layer.id === 'pl-bushes' ? getBushEntranceY() : (layer.entranceY || 0);
         const baseY = entranceY * te;
         const baseS = 1 + ((layer.entranceScale || 1) - 1) * te;
         const scrollYOffset = scrollY * layer.scrollMult;
         layer.el.style.transform =
-          `translateY(${baseY + scrollYOffset}px) scale(${baseS}) translateZ(0)`;
+          `translate3d(0, ${baseY + scrollYOffset}px, 0) scale(${baseS})`;
       }
     });
 
     if (HERO_CONTENT.el) {
       const contentY = (HERO_CONTENT.entranceY * te) + (scrollY * HERO_CONTENT.scrollMult);
-      HERO_CONTENT.el.style.transform = `translateY(${contentY}px) translateZ(0)`;
+      HERO_CONTENT.el.style.transform = `translate3d(0, ${contentY}px, 0)`;
     }
 
-    raf = requestAnimationFrame(tick);
+    raf = entranceDone ? null : requestAnimationFrame(tick);
+  }
+
+  function scheduleRaf() {
+    if (!raf && !paused) raf = requestAnimationFrame(tick);
   }
 
   function resume() {
     if (paused) {
       paused = false;
-      raf = requestAnimationFrame(tick);
+      scheduleRaf();
     }
   }
 
   function pause() {
     if (!paused) {
       paused = true;
-      cancelAnimationFrame(raf);
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
     }
   }
 
@@ -1750,6 +1770,15 @@ buildLetterSpans('name-austin', 'Austin');
       layer.el = document.getElementById(layer.id);
     });
     HERO_CONTENT.el = document.getElementById(HERO_CONTENT.id);
+
+    // Drive scroll updates via a passive scroll listener so the RAF only
+    // runs when there is actually something to paint.
+    window.addEventListener('scroll', () => {
+      if (!scrollDirty) {
+        scrollDirty = true;
+        scheduleRaf();
+      }
+    }, { passive: true });
 
     raf = requestAnimationFrame(tick);
 
