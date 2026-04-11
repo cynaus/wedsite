@@ -43,9 +43,7 @@
       inset: 0;
       pointer-events: none;
       background:
-        radial-gradient(80% 80% at 35% 40%, rgba(255, 235, 195, 0.08), transparent 75%);
-      mix-blend-mode: screen;
-      opacity: 0.5;
+        radial-gradient(80% 80% at 35% 40%, rgba(255, 235, 195, 0.04), transparent 75%);
     }
     #envelope-screen::after {
       content: '';
@@ -74,7 +72,6 @@
     .envelope-wrap {
       position: relative;
       width: clamp(270px, 62vw, 450px);
-      filter: drop-shadow(0 28px 54px rgba(10, 3, 2, 0.7));
       z-index: 2;
       perspective: 1400px;
     }
@@ -83,8 +80,17 @@
       position: absolute;
       inset: -20px;
       background: radial-gradient(ellipse at center, rgba(241, 207, 157, 0.2) 0%, transparent 68%);
-      filter: blur(14px);
       opacity: 0.7;
+      z-index: -1;
+    }
+    .envelope-wrap::after {
+      content: '';
+      position: absolute;
+      left: 8%; right: 8%;
+      bottom: -18px; top: 40%;
+      background: rgba(10, 3, 2, 0.65);
+      filter: blur(36px);
+      border-radius: 50%;
       z-index: -1;
     }
 
@@ -103,8 +109,6 @@
     /* flap */
     .flap-group {
       transform-origin: 210px 80px;
-      transform-style: preserve-3d;
-      backface-visibility: visible;
       transition: transform 11.5s cubic-bezier(0.23, 0.74, 0.24, 1);
     }
     .flap-group.open { transform: rotateX(-152deg) translateY(-2px); }
