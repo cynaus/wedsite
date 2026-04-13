@@ -1068,20 +1068,26 @@
       </div>
       <div class="tl-item">
         <div class="tl-dot">💍</div>
-        <p class="tl-time">4:00 PM</p>
+        <p class="tl-time">3:30 PM</p>
         <p class="tl-event fancy">Wedding Ceremony</p>
         <p class="tl-desc">Exchange of vows inside the chapel.</p>
       </div>
 
       <div class="tl-item">
+        <div class="tl-dot">🍹</div>
+        <p class="tl-time">5:00 PM - 6:00 PM</p>
+        <p class="tl-event fancy">Cocktail Hour</p>
+        <p class="tl-desc">Join us for drinks and mingling before dinner.</p>
+      </div>
+      <div class="tl-item">
         <div class="tl-dot">🍽️</div>
-        <p class="tl-time">5:00 PM</p>
+        <p class="tl-time">6:00 PM</p>
         <p class="tl-event fancy">Wedding Dinner</p>
         <p class="tl-desc">A Mexican banquet held at El Paseo Restaurant.</p>
       </div>
       <div class="tl-item">
         <div class="tl-dot">🥂</div>
-        <p class="tl-time">5:30 PM - 10:00 PM</p>
+        <p class="tl-time">6:00 PM - 10:00 PM</p>
         <p class="tl-event fancy">Open Bar</p>
         <p class="tl-desc">Alcoholic and non-alcoholic drinks are available.</p>
       </div>
@@ -1142,8 +1148,9 @@
       </div>
 
       <div class="menu-block">
-        <p class="menu-block-title">Side Dish</p>
+        <p class="menu-block-title">Side Dishes</p>
         <ul class="menu-list">
+          <li class="menu-item"><strong>Roasted Garlic, Rosemary &amp; Red Potato</strong></li>
           <li class="menu-item"><strong>Sauté Vegetables</strong> — asparagus, baby carrot, french green beans, zucchini &amp; yellow squash</li>
         </ul>
       </div>
@@ -1315,10 +1322,11 @@ const I18N_INDEX = {
     parkingLink: 'Directions →',
     dayTitle: 'The Day',
     daySub: 'Our celebration itinerary',
-    timelineEvents: ['Doors Open', 'Wedding Ceremony', 'Wedding Dinner', 'Open Bar', 'Cake Cutting & Dessert Table', 'Dancing & Celebration'],
+    timelineEvents: ['Doors Open', 'Wedding Ceremony', 'Cocktail Hour', 'Wedding Dinner', 'Open Bar', 'Cake Cutting & Dessert Table', 'Dancing & Celebration'],
     timelineDescs: [
       'Guests are welcomed and seated in the chapel.',
       'Exchange of vows inside the chapel.',
+      'Join us for drinks and mingling before dinner.',
       'A Mexican banquet held at El Paseo Restaurant.',
       'Alcoholic and non-alcoholic drinks are available.',
       'Speeches and the ceremonial cutting of the wedding cake.',
@@ -1326,7 +1334,7 @@ const I18N_INDEX = {
     ],
     menuTitle: 'Dinner Menu',
     menuSub: 'El Paseo Restaurant',
-    menuBlocks: ['Appetizers', 'Salad', 'Entrees', 'Side Dish'],
+    menuBlocks: ['Appetizers', 'Salad', 'Entrees', 'Side Dishes'],
     menuItems: [
       '<strong>Baked Puff Pastry</strong> — filled with vegetables &amp; cheese empanadas with pesto aioli',
       '<strong>Shrimp Ceviche Tostaditos</strong> — with avocado sauce',
@@ -1336,6 +1344,7 @@ const I18N_INDEX = {
       '<strong>Braised Pork Belly</strong> — with citrus chutney &amp; natural au jus',
       '<strong>Penne Pasta</strong> — with grilled vegetables, tomato, cilantro in a chipotle cream sauce',
       '<strong>Dungeness Crab and Shrimp Enchilada</strong> — tomatillo sauce &amp; cream',
+      '<strong>Roasted Garlic, Rosemary &amp; Red Potato</strong>',
       '<strong>Sauté Vegetables</strong> — asparagus, baby carrot, french green beans, zucchini &amp; yellow squash',
     ],
     menuNote: 'Please tell the restaurant staff if you have any allergies.',
@@ -1389,10 +1398,11 @@ const I18N_INDEX = {
     parkingLink: 'Cómo llegar →',
     dayTitle: 'El día',
     daySub: 'Itinerario de la celebración',
-    timelineEvents: ['Apertura de puertas', 'Ceremonia de boda', 'Cena de boda', 'Barra libre', 'Corte del pastel y mesa de postres', 'Baile y celebración'],
+    timelineEvents: ['Apertura de puertas', 'Ceremonia de boda', 'Hora del cóctel', 'Cena de boda', 'Barra libre', 'Corte del pastel y mesa de postres', 'Baile y celebración'],
     timelineDescs: [
       'Se da la bienvenida a los invitados y se les acomoda en la capilla.',
       'Intercambio de votos dentro de la capilla.',
+      'Únete a nosotros para tomar una copa y convivir antes de la cena.',
       'Banquete mexicano en el Restaurante El Paseo.',
       'Habrá bebidas alcohólicas y sin alcohol.',
       'Discursos y corte ceremonial del pastel de boda.',
@@ -1400,7 +1410,7 @@ const I18N_INDEX = {
     ],
     menuTitle: 'Menú de cena',
     menuSub: 'Restaurante El Paseo',
-    menuBlocks: ['Entradas', 'Ensalada', 'Platos fuertes', 'Guarnición'],
+    menuBlocks: ['Entradas', 'Ensalada', 'Platos fuertes', 'Guarniciones'],
     menuItems: [
       '<strong>Hojaldre horneado</strong> — empanaditas rellenas de vegetales y queso con alioli de pesto',
       '<strong>Tostaditos de ceviche de camarón</strong> — con salsa de aguacate',
@@ -1410,6 +1420,7 @@ const I18N_INDEX = {
       '<strong>Panceta de cerdo braseada</strong> — con chutney cítrico y jugo natural',
       '<strong>Pasta penne</strong> — con vegetales asados, tomate y cilantro en salsa cremosa de chipotle',
       '<strong>Enchilada de cangrejo Dungeness y camarón</strong> — con salsa de tomatillo y crema',
+      '<strong>Papa roja asada con ajo y romero</strong>',
       '<strong>Vegetales salteados</strong> — espárragos, zanahoria baby, ejotes franceses, calabacita verde y amarilla',
     ],
     menuNote: 'Por favor, informa al personal del restaurante si tienes alguna alergia.',
