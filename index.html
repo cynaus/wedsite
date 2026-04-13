@@ -171,7 +171,7 @@
       width: 100%; height: var(--hero-h, 100svh);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      contain: paint;
+      overflow: hidden;
       opacity: 0;
       transition: opacity 1.2s ease;
     }
@@ -193,7 +193,10 @@
       background-repeat: no-repeat;
       transform: translateZ(0);
     }
-    /* Promote only the two fastest-moving layers to their own compositor tile. */
+    /* Promote animated layers to their own compositor tile. Sky needs its own
+       tile because it carries a filter; without will-change the browser repaints
+       the filter in software every frame instead of compositing on the GPU. */
+    .hero-layer.sky,
     .hero-layer.bushes,
     .hero-layer.church { will-change: transform; }
     .hero-layer.sky {
@@ -1689,20 +1692,25 @@ buildLetterSpans('name-austin', 'Austin');
   let initialized = false;
   let lastScrollY = -1;
   let scrollDirty = false;
+  // Cached so tick() never reads window.innerWidth on the hot path.
+  let cachedViewportWidth = 0;
+  let isMobileCached = false;
+
+  // Round translation values to 0.5px to prevent sub-pixel oscillation
+  // causing the compositor to re-snap layers on every frame.
+  function px(v) { return Math.round(v * 2) / 2; }
 
   function getScrollY() {
     return window.scrollY || window.pageYOffset || 0;
   }
 
   function getArchClosedX(sign) {
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-    const magnitude = Math.max(66, Math.min(190, viewportWidth * 0.09));
+    const magnitude = Math.max(66, Math.min(190, cachedViewportWidth * 0.09));
     return magnitude * sign;
   }
 
   function getBushEntranceY() {
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-    const magnitude = Math.max(8, Math.min(18, 22 - (viewportWidth * 0.015)));
+    const magnitude = Math.max(8, Math.min(18, 22 - (cachedViewportWidth * 0.015)));
     return magnitude;
   }
 
@@ -1729,28 +1737,27 @@ buildLetterSpans('name-austin', 'Austin');
       if (!layer.el) return;
 
       if (layer.isArch) {
-        const closedX = getArchClosedX(layer.closedXSign || 0) * (1 - te);
-        const baseY = (layer.entranceY || 0) * te;
+        const closedX = px(getArchClosedX(layer.closedXSign || 0) * (1 - te));
+        const baseY = px((layer.entranceY || 0) * te);
         const startScale = layer.startScale || 1;
         const endScale = layer.entranceScale || 1;
         const baseS = startScale + ((endScale - startScale) * te);
-        const scrollDriftY = scrollY * layer.scrollMult;
+        const scrollDriftY = px(scrollY * layer.scrollMult);
         layer.el.style.transform =
           `translate3d(${closedX}px, ${baseY + scrollDriftY}px, 0) scale(${baseS})`;
       } else {
         const entranceY = layer.id === 'pl-bushes' ? getBushEntranceY() : (layer.entranceY || 0);
-        const baseY = entranceY * te;
+        const baseY = px(entranceY * te);
         const baseS = 1 + ((layer.entranceScale || 1) - 1) * te;
-        const isMobile = window.innerWidth <= 768;
-        const mult = (isMobile && layer.mobileScrollMult !== undefined) ? layer.mobileScrollMult : layer.scrollMult;
-        const scrollYOffset = scrollY * mult;
+        const mult = (isMobileCached && layer.mobileScrollMult !== undefined) ? layer.mobileScrollMult : layer.scrollMult;
+        const scrollYOffset = px(scrollY * mult);
         layer.el.style.transform =
           `translate3d(0, ${baseY + scrollYOffset}px, 0) scale(${baseS})`;
       }
     });
 
     if (HERO_CONTENT.el) {
-      const contentY = (HERO_CONTENT.entranceY * te) + (scrollY * HERO_CONTENT.scrollMult);
+      const contentY = px((HERO_CONTENT.entranceY * te) + (scrollY * HERO_CONTENT.scrollMult));
       HERO_CONTENT.el.style.transform = `translate3d(0, ${contentY}px, 0)`;
     }
 
@@ -1775,14 +1782,24 @@ buildLetterSpans('name-austin', 'Austin');
     }
   }
 
+  function updateViewportCache() {
+    cachedViewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    isMobileCached = cachedViewportWidth <= 768;
+  }
+
   window.initHeroParallax = function () {
     if (initialized) return;
     initialized = true;
+
+    updateViewportCache();
 
     LAYERS.forEach((layer) => {
       layer.el = document.getElementById(layer.id);
     });
     HERO_CONTENT.el = document.getElementById(HERO_CONTENT.id);
+
+    // Keep viewport cache fresh so tick() never reads window.innerWidth.
+    window.addEventListener('resize', updateViewportCache, { passive: true });
 
     // Drive scroll updates via a passive scroll listener so the RAF only
     // runs when there is actually something to paint.
