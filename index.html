@@ -195,23 +195,28 @@
     }
     /* Promote animated layers to their own compositor tile. Sky needs its own
        tile because it carries a filter; without will-change the browser repaints
-       the filter in software every frame instead of compositing on the GPU. */
+       the filter in software every frame instead of compositing on the GPU.
+       Arches are included because they are transformed every frame too — bare
+       translateZ(0) is treated as a hint, not a guarantee, on mobile WebKit. */
     .hero-layer.sky,
     .hero-layer.bushes,
-    .hero-layer.church { will-change: transform; }
+    .hero-layer.church,
+    .hero-layer.arch-left,
+    .hero-layer.arch-right { will-change: transform; }
     .hero-layer.sky {
       background-image: url('img/sky-clouds.png');
       background-position: center top;
       background-size: cover;
       z-index: 0;
-      filter: brightness(0.9);
+      /* Brightness darkening absorbed into .hero-overlay so the compositor
+         doesn't run a filter pass on the largest transformed layer. */
     }
     .hero-layer.church {
       background-image: url('img/bg-church.png');
       background-size: 1024px auto;
       background-position: center bottom;
       z-index: 1;
-      filter: brightness(0.8);
+      /* Same as sky — darkening lives on .hero-overlay now. */
     }
     .hero-layer.arch-left,
     .hero-layer.arch-right {
@@ -247,11 +252,13 @@
 
     .hero-overlay {
       position: absolute; inset: 0;
+      /* Half the strength of the post-filter-removal gradient — enough to
+         keep the white hero text legible without re-darkening the scene. */
       background: linear-gradient(to bottom,
-        rgba(9, 2, 2, 0.3) 0%,
+        rgba(9, 2, 2, 0.18) 0%,
         rgba(9, 2, 2, 0.08) 30%,
-        rgba(9, 2, 2, 0.12) 60%,
-        rgba(9, 2, 2, 0.58) 100%);
+        rgba(9, 2, 2, 0.15) 60%,
+        rgba(9, 2, 2, 0.31) 100%);
       z-index: 2;
     }
 
@@ -1695,13 +1702,37 @@ buildLetterSpans('name-austin', 'Austin');
   // Cached so tick() never reads window.innerWidth on the hot path.
   let cachedViewportWidth = 0;
   let isMobileCached = false;
+  // Cached so px() snaps to device-pixel boundaries on DPR=3 displays where
+  // 0.5 CSS px is still a fractional device pixel.
+  let cachedDpr = 1;
 
-  // Round translation values to 0.5px to prevent sub-pixel oscillation
-  // causing the compositor to re-snap layers on every frame.
-  function px(v) { return Math.round(v * 2) / 2; }
+  // While the iOS URL bar is sliding in/out the browser reports rapid scrollY
+  // deltas that don't correspond to real user-driven scroll. We freeze the
+  // parallax at its last value for the duration of that animation.
+  let urlBarSettling = false;
+  let urlBarTimer = null;
+  let lastVisualHeight = 0;
+
+  // Round translation values to the nearest device pixel so the compositor
+  // doesn't have to re-snap (and re-antialias) layers on every frame.
+  function px(v) { return Math.round(v * cachedDpr) / cachedDpr; }
 
   function getScrollY() {
-    return window.scrollY || window.pageYOffset || 0;
+    // Clamp to non-negative so iOS rubber-band overscroll (which produces
+    // negative scrollY at the top of the page) doesn't drive layers backwards.
+    const y = window.scrollY || window.pageYOffset || 0;
+    return y > 0 ? y : 0;
+  }
+
+  // Soft cap: hard-clamping at MAX_SCENE_SCROLL_Y caused a visible jolt when
+  // scrolling back up across the threshold. Easing asymptotically toward the
+  // cap means the parallax slowly stalls instead of freezing instantly.
+  function applyScrollCap(y) {
+    const knee = MAX_SCENE_SCROLL_Y * 0.65;
+    if (y <= knee) return y;
+    const over = y - knee;
+    const range = MAX_SCENE_SCROLL_Y - knee;
+    return knee + range * (over / (over + range));
   }
 
   function getArchClosedX(sign) {
@@ -1722,9 +1753,14 @@ buildLetterSpans('name-austin', 'Austin');
 
     if (t >= 1) entranceDone = true;
 
-    const scrollY = Math.min(getScrollY(), MAX_SCENE_SCROLL_Y);
+    // Hold the parallax at its previous position while the URL bar is mid-
+    // animation — the scroll deltas it generates are not user-intended.
+    const rawScrollY = applyScrollCap(getScrollY());
+    const scrollY = urlBarSettling && lastScrollY >= 0 ? lastScrollY : rawScrollY;
     const scrollChanged = scrollY !== lastScrollY;
     lastScrollY = scrollY;
+    // Shared so the bloom canvas paints from the same scrollY in the same frame.
+    window.__heroScrollY = scrollY;
     scrollDirty = false;
 
     // Skip paint if entrance is done and scroll hasn't moved.
@@ -1761,6 +1797,10 @@ buildLetterSpans('name-austin', 'Austin');
       HERO_CONTENT.el.style.transform = `translate3d(0, ${contentY}px, 0)`;
     }
 
+    // Push the bloom canvas in the same frame, off the same scrollY, so its
+    // translateY never lags or leads the layers it sits in front of.
+    if (typeof window.updateBloomScroll === 'function') window.updateBloomScroll();
+
     raf = entranceDone ? null : requestAnimationFrame(tick);
   }
 
@@ -1785,6 +1825,7 @@ buildLetterSpans('name-austin', 'Austin');
   function updateViewportCache() {
     cachedViewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
     isMobileCached = cachedViewportWidth <= 768;
+    cachedDpr = window.devicePixelRatio || 1;
   }
 
   window.initHeroParallax = function () {
@@ -1800,6 +1841,25 @@ buildLetterSpans('name-austin', 'Austin');
 
     // Keep viewport cache fresh so tick() never reads window.innerWidth.
     window.addEventListener('resize', updateViewportCache, { passive: true });
+
+    // Watch the visual viewport for URL-bar slide animations. While the height
+    // is changing we freeze parallax updates so the scene doesn't lurch with
+    // the bar; once it settles for ~220ms we resume.
+    if (window.visualViewport) {
+      lastVisualHeight = window.visualViewport.height;
+      window.visualViewport.addEventListener('resize', () => {
+        const h = window.visualViewport.height;
+        if (Math.abs(h - lastVisualHeight) > 4) {
+          urlBarSettling = true;
+          if (urlBarTimer) clearTimeout(urlBarTimer);
+          urlBarTimer = setTimeout(() => {
+            urlBarSettling = false;
+            scheduleRaf();
+          }, 220);
+        }
+        lastVisualHeight = h;
+      }, { passive: true });
+    }
 
     // Drive scroll updates via a passive scroll listener so the RAF only
     // runs when there is actually something to paint.
@@ -2008,17 +2068,16 @@ function startRoseBlooms() {
   resize();
   window.addEventListener('resize', resize);
 
-  let scrollRaf = null;
+  // Driven synchronously from the parallax tick so we never paint a stale
+  // scrollY in a frame where the parallax has already advanced. Falls back to
+  // window.scrollY in the unlikely case the bloom inits before the parallax.
   function updateScroll() {
-    if (scrollRaf) return;
-    scrollRaf = requestAnimationFrame(() => {
-      scrollRaf = null;
-      const scrollY = Math.min(window.scrollY || 0, 180);
-      const bloomMult = window.innerWidth <= 768 ? -0.5 : -0.75;
-      canvas.style.transform = `translateY(${scrollY * bloomMult}px) translateZ(0)`;
-    });
+    const scrollY = typeof window.__heroScrollY === 'number'
+      ? window.__heroScrollY
+      : Math.min(window.scrollY || 0, 180);
+    const bloomMult = window.innerWidth <= 768 ? -0.5 : -0.75;
+    canvas.style.transform = `translateY(${scrollY * bloomMult}px) translateZ(0)`;
   }
-  window.addEventListener('scroll', updateScroll, { passive: true });
   window.updateBloomScroll = updateScroll;
   updateScroll();
 
