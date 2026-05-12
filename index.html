@@ -398,6 +398,36 @@
     .scroll-chevrons i:nth-child(3) { animation-delay: 0.3s; }
     @keyframes chevron { 0%,100%{opacity:0.2} 50%{opacity:1} }
 
+    /* hero RSVP CTA */
+    .hero-cta {
+      display: inline-block;
+      margin-top: 1.75rem;
+      padding: 1.05rem 3rem;
+      font-family: 'Playfair Display SC', serif;
+      font-size: 1rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ivory);
+      background: rgba(192, 39, 42, 0.92);
+      border: 1px solid rgba(250, 246, 240, 0.35);
+      text-decoration: none;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      transition: background 0.25s ease, transform 0.2s ease, border-color 0.25s ease;
+    }
+    .hero-cta:hover {
+      background: var(--red-deep);
+      border-color: rgba(250, 246, 240, 0.6);
+      transform: translateY(-2px);
+    }
+    .hero-cta:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
+    }
+    @media (max-width: 480px) {
+      .hero-cta { font-size: 0.9rem; padding: 0.9rem 2.4rem; margin-top: 1.25rem; letter-spacing: 0.28em; }
+    }
+
     @media (max-width: 768px) {
       .hero-layer.church { background-size: 90vw auto; background-position: center 50%; }
       .hero-layer.arch-left,
@@ -968,6 +998,7 @@
     </h1>
     <p class="hero-date fancy hero-copy-fade">Saturday, February 27th, 2027</p>
     <p class="hero-location caps hero-copy-fade">Santa Barbara, California</p>
+    <a href="#sec-rsvp" class="hero-cta hero-copy-fade" id="hero-rsvp-cta">RSVP</a>
   </div>
 
   <div class="scroll-hint">
@@ -1274,6 +1305,25 @@
   <p>Cynthia &amp; Austin &nbsp;·&nbsp; February 27, 2027 &nbsp;·&nbsp; Santa Barbara, California</p>
 </footer>
 
+<div class="jump-menu" id="jump-menu" data-open="false">
+  <button type="button"
+          class="jump-menu-trigger"
+          id="jump-menu-trigger"
+          aria-expanded="false"
+          aria-controls="jump-menu-panel"
+          aria-label="Jump to section">
+    <span class="jump-menu-icon" aria-hidden="true"></span>
+  </button>
+  <div class="jump-menu-panel" id="jump-menu-panel" role="menu" aria-labelledby="jump-menu-trigger">
+    <a role="menuitem" href="#sec-accomm"    data-jump="accomm">Accommodations</a>
+    <a role="menuitem" href="#sec-venue"     data-jump="venue">Venues</a>
+    <a role="menuitem" href="#sec-itinerary" data-jump="itinerary">Itinerary</a>
+    <a role="menuitem" href="#sec-menu"      data-jump="menu">Dinner Menu</a>
+    <a role="menuitem" href="#sec-gifts"     data-jump="gifts">Gifts</a>
+    <a role="menuitem" href="#sec-rsvp"      data-jump="rsvp">RSVP</a>
+  </div>
+</div>
+
 <div class="language-toggle" id="language-toggle" role="group" aria-label="Language selector">
   <button type="button" class="language-toggle-option" data-lang="en" aria-pressed="true">EN</button>
   <button type="button" class="language-toggle-option" data-lang="es" aria-pressed="false">ES</button>
@@ -1319,6 +1369,16 @@ const I18N_INDEX = {
     heroDate: 'Saturday, February 27th, 2027',
     heroLocation: 'Santa Barbara, California',
     scrollHint: 'Scroll to continue',
+    heroCta: 'RSVP',
+    jumpMenu: {
+      aria: 'Jump to section',
+      accomm: 'Accommodations',
+      venue: 'Venues',
+      itinerary: 'Itinerary',
+      menu: 'Dinner Menu',
+      gifts: 'Gifts',
+      rsvp: 'RSVP',
+    },
     accommodationsTitle: 'Accommodations',
     accommodationsSub: 'Where to rest your head',
     accommodationsText: 'We have curated a selection of nearby hotels to make your stay as comfortable and memorable as possible. From luxurious retreats to charming boutique options, there is something for every guest.',
@@ -1395,6 +1455,16 @@ const I18N_INDEX = {
     heroDate: 'Sábado, 27 de febrero de 2027',
     heroLocation: 'Santa Bárbara, California',
     scrollHint: 'Desliza para continuar',
+    heroCta: 'Confirmar Asistencia',
+    jumpMenu: {
+      aria: 'Saltar a una sección',
+      accomm: 'Hospedaje',
+      venue: 'Lugares',
+      itinerary: 'Itinerario',
+      menu: 'Menú',
+      gifts: 'Regalos',
+      rsvp: 'Confirmación',
+    },
     accommodationsTitle: 'Hospedaje',
     accommodationsSub: 'Dónde descansar',
     accommodationsText: 'Hemos seleccionado una lista de hoteles cercanos para que tu estancia sea lo más cómoda y memorable posible. Desde retiros de lujo hasta opciones boutique con encanto, hay algo para cada invitado.',
@@ -1477,6 +1547,16 @@ function applyIndexTranslations(lang) {
   setText('.hero-date', copy.heroDate);
   setText('.hero-location', copy.heroLocation);
   setText('.scroll-hint span', copy.scrollHint);
+  setText('#hero-rsvp-cta', copy.heroCta);
+
+  if (copy.jumpMenu) {
+    const jumpTrigger = document.getElementById('jump-menu-trigger');
+    if (jumpTrigger) jumpTrigger.setAttribute('aria-label', copy.jumpMenu.aria);
+    document.querySelectorAll('#jump-menu-panel a[data-jump]').forEach((a) => {
+      const key = a.dataset.jump;
+      if (copy.jumpMenu[key]) a.textContent = copy.jumpMenu[key];
+    });
+  }
 
   const envCardLines = document.querySelectorAll('#envLetter text');
   if (envCardLines[0]) envCardLines[0].textContent = copy.envCardLine1;
@@ -1639,6 +1719,41 @@ function initLanguageToggle() {
 }
 
 initLanguageToggle();
+
+// ─────────────────────────────────────
+// JUMP MENU (section navigator)
+// ─────────────────────────────────────
+(function initJumpMenu () {
+  const menu    = document.getElementById('jump-menu');
+  const trigger = document.getElementById('jump-menu-trigger');
+  const panel   = document.getElementById('jump-menu-panel');
+  if (!menu || !trigger || !panel) return;
+
+  const setOpen = (open) => {
+    menu.dataset.open = open ? 'true' : 'false';
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(menu.dataset.open !== 'true');
+  });
+
+  panel.addEventListener('click', (e) => {
+    if (e.target.closest('a')) setOpen(false);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(e.target) && menu.dataset.open === 'true') setOpen(false);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu.dataset.open === 'true') {
+      setOpen(false);
+      trigger.focus();
+    }
+  });
+})();
 
 // ─────────────────────────────────────
 // HERO LETTERING REVEAL
