@@ -2007,6 +2007,15 @@ buildLetterSpans('name-austin', 'Austin');
   let urlBarTimer = null;
   let lastVisualHeight = 0;
 
+  // When the freeze ends, the real scrollY may have moved tens or hundreds of
+  // pixels while parallax was held in place. Easing from the frozen position
+  // to the live value over a few frames avoids the visible one-frame snap
+  // (most obvious on the sky and arch layers when scrolling back up).
+  const CATCH_UP_DURATION = 160;
+  let catchUpStart = null;
+  let catchUpFrom = 0;
+  let catchUpPending = false;
+
   // Round translation values to the nearest device pixel so the compositor
   // doesn't have to re-snap (and re-antialias) layers on every frame.
   function px(v) { return Math.round(v * cachedDpr) / cachedDpr; }
@@ -2047,18 +2056,39 @@ buildLetterSpans('name-austin', 'Austin');
 
     if (t >= 1) entranceDone = true;
 
+    // Activate any pending catch-up here so it has a real RAF timestamp.
+    if (catchUpPending) {
+      catchUpStart = ts;
+      catchUpPending = false;
+    }
+
     // Hold the parallax at its previous position while the URL bar is mid-
     // animation — the scroll deltas it generates are not user-intended.
     const rawScrollY = applyScrollCap(getScrollY());
-    const scrollY = urlBarSettling && lastScrollY >= 0 ? lastScrollY : rawScrollY;
+    let scrollY;
+    let inCatchUp = false;
+    if (urlBarSettling && lastScrollY >= 0) {
+      scrollY = lastScrollY;
+      // A new freeze cancels any in-flight catch-up; if needed, the next
+      // freeze-end will start a fresh one from the current frozen position.
+      catchUpStart = null;
+    } else if (catchUpStart !== null) {
+      const k = Math.min(1, (ts - catchUpStart) / CATCH_UP_DURATION);
+      scrollY = catchUpFrom + (rawScrollY - catchUpFrom) * easeOutCubic(k);
+      if (k >= 1) catchUpStart = null;
+      else inCatchUp = true;
+    } else {
+      scrollY = rawScrollY;
+    }
     const scrollChanged = scrollY !== lastScrollY;
     lastScrollY = scrollY;
     // Shared so the bloom canvas paints from the same scrollY in the same frame.
     window.__heroScrollY = scrollY;
     scrollDirty = false;
 
-    // Skip paint if entrance is done and scroll hasn't moved.
-    if (entranceDone && !scrollChanged) {
+    // Skip paint if entrance is done and scroll hasn't moved (and we're not
+    // mid-catch-up — that needs to keep advancing even when scroll is idle).
+    if (entranceDone && !scrollChanged && !inCatchUp) {
       raf = null;
       return;
     }
@@ -2095,7 +2125,7 @@ buildLetterSpans('name-austin', 'Austin');
     // translateY never lags or leads the layers it sits in front of.
     if (typeof window.updateBloomScroll === 'function') window.updateBloomScroll();
 
-    raf = entranceDone ? null : requestAnimationFrame(tick);
+    raf = (entranceDone && !inCatchUp) ? null : requestAnimationFrame(tick);
   }
 
   function scheduleRaf() {
@@ -2148,6 +2178,10 @@ buildLetterSpans('name-austin', 'Austin');
           if (urlBarTimer) clearTimeout(urlBarTimer);
           urlBarTimer = setTimeout(() => {
             urlBarSettling = false;
+            if (lastScrollY >= 0) {
+              catchUpFrom = lastScrollY;
+              catchUpPending = true;
+            }
             scheduleRaf();
           }, 220);
         }
