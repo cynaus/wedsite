@@ -157,18 +157,6 @@
       margin: 0 auto 3rem;
     }
 
-    /* ── HOTEL CATEGORY LABEL ──────────────────────────── */
-    .hotel-category-label {
-      font-family: 'Playfair Display SC', serif;
-      font-size: 0.65rem;
-      letter-spacing: 0.28em;
-      color: var(--gold);
-      margin: 2rem 0 0.75rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid rgba(192,39,42,0.15);
-    }
-    .hotel-category-label:first-of-type { margin-top: 0; }
-
     /* ── SECTION OVERRIDE for this page ────────────────── */
     /* Hotels section gets a wider max-width for the grid */
     #sec-hotels { max-width: 1000px; }
@@ -200,8 +188,6 @@
         Each is within easy reach of both the ceremony and reception venues.
       </p>
 
-      <!-- HIGH-END PICKS -->
-      <p class="hotel-category-label">High-End Picks</p>
       <div class="hotels-grid">
 
         <!-- HOTEL CARD 1 — Hotel Californian -->
@@ -272,12 +258,6 @@
             <a class="btn-hotel btn-hotel-secondary" href="https://www.google.com/maps/dir/?api=1&destination=202+W+Cabrillo+Blvd,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Directions</a>
           </div>
         </div>
-
-      </div><!-- /.hotels-grid (high-end) -->
-
-      <!-- BUDGET PICKS -->
-      <p class="hotel-category-label">Budget Picks</p>
-      <div class="hotels-grid">
 
         <!-- HOTEL CARD 4 — Harbor House Inn -->
         <div class="hotel-card">
@@ -370,7 +350,7 @@
           </div>
         </div>
 
-      </div><!-- /.hotels-grid (budget) -->
+      </div><!-- /.hotels-grid -->
     </div><!-- /.section -->
   </div>
 
@@ -386,6 +366,7 @@
 
   <script>
     const LANGUAGE_STORAGE_KEY = 'preferredLanguage';
+    const LANGUAGE_RETURN_STORAGE_KEY = 'preferredLanguageFromHotels';
     const I18N_HOTELS = {
       en: {
         languageSelectorLabel: 'Language selector',
@@ -395,7 +376,6 @@
         pageTitle: 'Accommodations',
         location: 'Santa Barbara, California',
         intro: 'We have arranged a selection of nearby hotels to suit every preference. Each is within easy reach of both the ceremony and reception venues.',
-        categoryLabels: ['High-End Picks', 'Budget Picks'],
         tiers: [
           '★★★★★ · Boutique Luxury', '★★★★ · Historic', '★★★★ · Boutique',
           '★★★ · Charming', '★★★ · Boutique', '★★ · Budget', '★★ · Value',
@@ -438,7 +418,6 @@
         pageTitle: 'Hospedaje',
         location: 'Santa Bárbara, California',
         intro: 'Hemos seleccionado una lista de hoteles cercanos para cada preferencia. Todos están a poca distancia tanto de la ceremonia como de la recepción.',
-        categoryLabels: ['Opciones de lujo', 'Opciones económicas'],
         tiers: [
           '★★★★★ · Lujo boutique', '★★★★ · Histórico', '★★★★ · Boutique',
           '★★★ · Encantador', '★★★ · Boutique', '★★ · Económico', '★★ · Valor',
@@ -489,9 +468,6 @@
       setText('.page-header-sub', copy.location);
       setText('.hotels-intro', copy.intro);
 
-      const categoryLabels = document.querySelectorAll('.hotel-category-label');
-      categoryLabels.forEach((el, i) => { if (copy.categoryLabels[i]) el.textContent = copy.categoryLabels[i]; });
-
       const tiers = document.querySelectorAll('.hotel-tier');
       tiers.forEach((el, i) => { if (copy.tiers[i]) el.textContent = copy.tiers[i]; });
       const distances = document.querySelectorAll('.hotel-distance');
@@ -517,9 +493,18 @@
     function applyLanguage(lang) {
       const normalized = lang === 'es' ? 'es' : 'en';
       const toggle = document.getElementById('language-toggle');
+      const currentUrl = new URL(window.location.href);
 
       document.documentElement.lang = normalized;
       document.documentElement.dataset.language = normalized;
+
+      if (normalized === 'es') {
+        currentUrl.searchParams.set('lang', 'es');
+      } else {
+        currentUrl.searchParams.delete('lang');
+      }
+      history.replaceState(null, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+
       applyHotelsTranslations(normalized);
 
       if (!toggle) return;
@@ -546,19 +531,22 @@
     function initLanguageToggle() {
       const toggle = document.getElementById('language-toggle');
       let startingLanguage = 'en';
+      let savedLanguage = null;
+      const navigationEntry = performance.getEntriesByType?.('navigation')?.[0];
+      const isHistoryNavigation = navigationEntry?.type === 'back_forward';
 
       try {
-        const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-        if (savedLanguage === 'es') startingLanguage = 'es';
+        savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+        if (savedLanguage === 'es' || savedLanguage === 'en') startingLanguage = savedLanguage;
       } catch (err) {
         console.warn('Language preference could not be read from localStorage.', err);
       }
 
       const urlLang = new URLSearchParams(window.location.search).get('lang');
-      if (urlLang === 'es') {
+      if (!isHistoryNavigation && urlLang === 'es') {
         startingLanguage = 'es';
         try { localStorage.setItem(LANGUAGE_STORAGE_KEY, 'es'); } catch (_) {}
-      } else if (urlLang === 'en') {
+      } else if (!isHistoryNavigation && urlLang === 'en') {
         startingLanguage = 'en';
         try { localStorage.setItem(LANGUAGE_STORAGE_KEY, 'en'); } catch (_) {}
       }
@@ -574,6 +562,7 @@
         applyLanguage(nextLanguage);
         try {
           localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+          sessionStorage.setItem(LANGUAGE_RETURN_STORAGE_KEY, nextLanguage);
         } catch (err) {
           console.warn('Language preference could not be saved to localStorage.', err);
         }
@@ -581,6 +570,17 @@
     }
 
     initLanguageToggle();
+
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+
+      try {
+        const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+        if (savedLanguage === 'es' || savedLanguage === 'en') applyLanguage(savedLanguage);
+      } catch (err) {
+        console.warn('Language preference could not be refreshed from localStorage.', err);
+      }
+    });
 
     // Scroll reveal — same pattern as index.html
     const revealEls = document.querySelectorAll('.section');
