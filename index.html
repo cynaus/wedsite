@@ -265,7 +265,30 @@
     .hero-content {
       position: relative; z-index: 5;
       text-align: center;
+      width: min(92vw, 760px);
       padding: 2rem;
+      isolation: isolate;
+    }
+    .hero-content::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 46%;
+      width: min(110vw, 780px);
+      height: 78%;
+      min-height: 340px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at center,
+          rgba(18, 6, 4, 0.43) 0%,
+          rgba(18, 6, 4, 0.31) 34%,
+          rgba(18, 6, 4, 0.12) 66%,
+          transparent 100%);
+      filter: blur(14px);
+      opacity: 0.88;
+      z-index: -1;
+      pointer-events: none;
     }
     .hero-copy-fade {
       opacity: 0;
@@ -285,8 +308,10 @@
       -webkit-text-stroke: 0.35px rgba(92, 58, 35, 0.45);
       margin-bottom: 0.75rem;
       text-shadow:
-        0 1px 2px rgba(0,0,0,0.45),
-        0 6px 18px rgba(0,0,0,0.5);
+        0 1px 2px rgba(0,0,0,0.68),
+        0 4px 12px rgba(0,0,0,0.62),
+        0 12px 30px rgba(0,0,0,0.48),
+        0 0 18px rgba(255,235,198,0.18);
     }
 
     .hero-wedding-of {
@@ -299,8 +324,10 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       text-shadow:
-        0 1px 2px rgba(0,0,0,0.45),
-        0 6px 18px rgba(0,0,0,0.5);
+        0 1px 2px rgba(0,0,0,0.68),
+        0 4px 12px rgba(0,0,0,0.62),
+        0 12px 30px rgba(0,0,0,0.48),
+        0 0 18px rgba(255,235,198,0.18);
     }
 
     .hero-names {
@@ -310,8 +337,10 @@
       color: var(--ivory);
       line-height: 1;
       text-shadow:
-        0 2px 4px rgba(0,0,0,0.55),
-        0 10px 28px rgba(0,0,0,0.6);
+        0 2px 3px rgba(0,0,0,0.72),
+        0 6px 18px rgba(0,0,0,0.66),
+        0 16px 42px rgba(0,0,0,0.55),
+        0 0 22px rgba(255,238,204,0.2);
     }
 
     .hero-ampersand {
@@ -346,8 +375,10 @@
       font-style: italic;
       letter-spacing: 0.05em;
       text-shadow:
-        0 1px 2px rgba(0,0,0,0.45),
-        0 6px 18px rgba(0,0,0,0.5);
+        0 1px 2px rgba(0,0,0,0.68),
+        0 4px 12px rgba(0,0,0,0.62),
+        0 12px 30px rgba(0,0,0,0.48),
+        0 0 18px rgba(255,235,198,0.18);
     }
 
     .hero-location {
@@ -358,8 +389,10 @@
       color: #fff;
       margin-top: 0.75rem;
       text-shadow:
-        0 1px 2px rgba(0,0,0,0.45),
-        0 6px 18px rgba(0,0,0,0.5);
+        0 1px 2px rgba(0,0,0,0.68),
+        0 4px 12px rgba(0,0,0,0.62),
+        0 12px 30px rgba(0,0,0,0.48),
+        0 0 18px rgba(255,235,198,0.18);
     }
 
     /* scroll indicator */
@@ -370,6 +403,27 @@
       text-align: center;
       opacity: 0;
       transform: translateY(12px);
+      padding: 0.65rem 1.35rem 0.85rem;
+      isolation: isolate;
+    }
+    .scroll-hint::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 52%;
+      width: 190%;
+      height: 150%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at center,
+          rgba(18, 6, 4, 0.36) 0%,
+          rgba(18, 6, 4, 0.24) 42%,
+          rgba(18, 6, 4, 0.08) 72%,
+          transparent 100%);
+      filter: blur(10px);
+      z-index: -1;
+      pointer-events: none;
     }
     #hero.visible .scroll-hint {
       animation: fadeUp 0.85s ease 1.65s both;
@@ -425,6 +479,38 @@
       outline-offset: 3px;
     }
     @media (max-width: 480px) {
+      .hero-content {
+        width: min(94vw, 420px);
+        padding: 1.35rem 1rem 1.6rem;
+      }
+      .hero-content::before {
+        width: 118vw;
+        height: 86%;
+        min-height: 410px;
+        background:
+          radial-gradient(ellipse at center,
+            rgba(18, 6, 4, 0.58) 0%,
+            rgba(18, 6, 4, 0.4) 38%,
+            rgba(18, 6, 4, 0.18) 70%,
+            transparent 100%);
+        filter: blur(16px);
+        opacity: 0.95;
+      }
+      .hero-location { letter-spacing: 0.22em; }
+      .scroll-hint {
+        bottom: 1.75rem;
+        padding: 0.7rem 1.15rem 0.9rem;
+      }
+      .scroll-hint::before {
+        width: 220%;
+        height: 165%;
+        background:
+          radial-gradient(ellipse at center,
+            rgba(18, 6, 4, 0.48) 0%,
+            rgba(18, 6, 4, 0.32) 44%,
+            rgba(18, 6, 4, 0.12) 74%,
+            transparent 100%);
+      }
       .hero-cta { font-size: 0.9rem; padding: 0.9rem 2.4rem; margin-top: 1.25rem; letter-spacing: 0.28em; }
     }
 
@@ -2385,6 +2471,7 @@ function startGoldenMotes() {
 
   function createMote() {
     const edgeBias = Math.random();
+    const isHeroMote = Math.random() < 0.16;
     let x;
     let y;
 
@@ -2402,33 +2489,38 @@ function startGoldenMotes() {
     return {
       x,
       y,
-      r: 0.24 + Math.random() * 0.78,
-      vx: (-0.05 + Math.random() * 0.1) * 0.1,
-      vy: (-0.04 - Math.random() * 0.16) * 0.1,
-      twinkleSpeed: 0.0008 + Math.random() * 0.002,
+      r: isHeroMote ? 0.95 + Math.random() * 1.15 : 0.38 + Math.random() * 0.95,
+      glow: isHeroMote ? 7.2 + Math.random() * 2.2 : 5.2 + Math.random() * 1.8,
+      intensity: isHeroMote ? 1.22 : 1,
+      vx: (-0.05 + Math.random() * 0.1) * (isHeroMote ? 0.07 : 0.1),
+      vy: (-0.04 - Math.random() * 0.16) * (isHeroMote ? 0.07 : 0.1),
+      twinkleSpeed: (isHeroMote ? 0.00055 : 0.0008) + Math.random() * 0.002,
       twinkleOffset: Math.random() * Math.PI * 2,
     };
   }
 
   function createMotes() {
-    const count = Math.max(24, Math.round((W * H) / 42000));
+    const count = Math.max(36, Math.round((W * H) / 30000));
     return Array.from({ length: count }, createMote);
   }
 
   resize();
 
   function drawMote(mote, ts) {
-    const alpha = 0.5 + ((Math.sin((ts * mote.twinkleSpeed) + mote.twinkleOffset) + 1) * 0.25);
-    const gradient = ctx.createRadialGradient(mote.x, mote.y, 0, mote.x, mote.y, mote.r * 4.5);
-    gradient.addColorStop(0, `rgba(255, 245, 214, ${alpha})`);
-    gradient.addColorStop(0.35, `rgba(236, 206, 130, ${alpha * 0.55})`);
+    const twinkle = (Math.sin((ts * mote.twinkleSpeed) + mote.twinkleOffset) + 1) * 0.5;
+    const alpha = Math.min(0.96, (0.58 + twinkle * 0.34) * mote.intensity);
+    const glowRadius = mote.r * mote.glow;
+    const gradient = ctx.createRadialGradient(mote.x, mote.y, 0, mote.x, mote.y, glowRadius);
+    gradient.addColorStop(0, `rgba(255, 252, 232, ${alpha})`);
+    gradient.addColorStop(0.18, `rgba(255, 233, 171, ${alpha * 0.82})`);
+    gradient.addColorStop(0.48, `rgba(238, 196, 102, ${alpha * 0.42})`);
     gradient.addColorStop(1, 'rgba(201, 168, 76, 0)');
 
     ctx.save();
-    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(mote.x, mote.y, mote.r * 4.5, 0, Math.PI * 2);
+    ctx.arc(mote.x, mote.y, glowRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
