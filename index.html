@@ -708,7 +708,6 @@
     /* ══════════════════════════════════════
       DINNER MENU
     ══════════════════════════════════════ */
-    #sec-menu { background: var(--ivory-dark); }
     .menu-wrap {
       display: grid;
       gap: 1.1rem;
@@ -717,6 +716,10 @@
       background: var(--ivory);
       border: 1px solid rgba(192,39,42,0.12);
       padding: 1.15rem 1.2rem;
+    }
+    .section-bg-ivory .menu-block,
+    .section-bg-ivory .parking-item {
+      background: var(--ivory-dark);
     }
     .menu-block-title {
       font-family: 'Playfair Display SC', serif;
@@ -758,6 +761,43 @@
       font-style: italic;
       color: var(--text-mid);
       font-size: 1.02rem;
+    }
+
+    /* ══════════════════════════════════════
+      RULES
+    ══════════════════════════════════════ */
+    .rules-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      font-style: italic;
+      line-height: 1.8;
+      color: var(--text-mid);
+      text-align: center;
+      margin: 0 auto 1.5rem;
+      max-width: 600px;
+    }
+    .rules-list {
+      list-style: none;
+      display: grid;
+      gap: 0.85rem;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    .rules-item {
+      border: 1px solid rgba(192,39,42,0.12);
+      background: var(--ivory-dark);
+      padding: 0.95rem 1rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.08rem;
+      line-height: 1.6;
+      color: var(--text-mid);
+      font-style: italic;
+    }
+    .rules-item strong {
+      color: var(--text-dark);
+      font-style: normal;
+      font-weight: 600;
     }
 
     /* ══════════════════════════════════════
@@ -1126,29 +1166,9 @@
 </div>
 
 <!-- ═══════════════════════════════════
-     ACCOMMODATIONS
-═══════════════════════════════════ -->
-<div class="section-bg-ivory">
-  <div class="section" id="sec-accomm">
-    <div class="section-sep">
-      <div class="sep-line"></div>
-      <div class="sep-img"></div>
-      <div class="sep-line"></div>
-    </div>
-    <h2 class="section-title fancy">Accommodations</h2>
-    <p class="section-sub">Where to rest your head</p>
-    <p class="accomm-text fancy">
-      We have curated a selection of nearby hotels to make your stay as comfortable and memorable as possible.
-      From luxurious retreats to charming boutique options, there is something for every guest.
-    </p>
-    <a href="hotels.html" class="btn-primary">View Recommended Hotels</a>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════
      VENUE / MAP
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory-dark">
+<div class="section-bg-ivory">
   <div class="section" id="sec-venue">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -1206,7 +1226,7 @@
 <!-- ═══════════════════════════════════
      ITINERARY
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory">
+<div class="section-bg-ivory-dark">
   <div class="section" id="sec-itinerary">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -1267,7 +1287,7 @@
 <!-- ═══════════════════════════════════
      DINNER MENU
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory-dark">
+<div class="section-bg-ivory">
   <div class="section" id="sec-menu">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -1317,9 +1337,53 @@
 </div>
 
 <!-- ═══════════════════════════════════
-     GIFTS
+     ACCOMMODATIONS
+═══════════════════════════════════ -->
+<div class="section-bg-ivory-dark">
+  <div class="section" id="sec-accomm">
+    <div class="section-sep">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy">Accommodations</h2>
+    <p class="section-sub">Where to rest your head</p>
+    <p class="accomm-text fancy">
+      We have curated a selection of nearby hotels to make your stay as comfortable and memorable as possible.
+      From luxurious retreats to charming boutique options, there is something for every guest.
+    </p>
+    <a href="hotels.html" class="btn-primary">View Recommended Hotels</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     RULES
 ═══════════════════════════════════ -->
 <div class="section-bg-ivory">
+  <div class="section" id="sec-rules">
+    <div class="section-sep">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy">Rules</h2>
+    <p class="section-sub">A few kind requests</p>
+    <p class="rules-text fancy">
+      To help us keep the day peaceful, safe, and focused on the ceremony, we kindly ask all guests to abide by the following requests.
+    </p>
+    <ul class="rules-list">
+      <li class="rules-item"><strong>Adults only.</strong> While we love your little ones, our wedding celebration will be an adults-only event.</li>
+      <li class="rules-item"><strong>Silence phones during the ceremony.</strong> Please keep phones silenced so everyone can be fully present.</li>
+      <li class="rules-item"><strong>No smoking or vaping.</strong> Smoking and vaping are not permitted anywhere on venue property.</li>
+      <li class="rules-item"><strong>No ceremony photos.</strong> Please refrain from taking photos during the ceremony; our photographer will capture those moments for everyone.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     GIFTS
+═══════════════════════════════════ -->
+<div class="section-bg-ivory-dark">
   <div class="section" id="sec-gifts">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -1331,6 +1395,10 @@
     <p class="gifts-text fancy">
       Your love and company on our special day is truly the greatest gift of all. However, if you'd
       like to contribute to our honeymoon it would be deeply appreciated.
+
+      For our honeymoon, we're escaping to Japan for two weeks during the height of cherry blossom season. We'll be splitting our time between peaceful countryside hot springs and scenic sakura-filled destinations. Cozy train rides, incredible food, and plenty of shopping will be on the schedule.
+
+      We're incredibly excited to begin this next chapter together&mdash;and grateful for everyone helping us get there.
     </p>
     <div class="radio-group" id="giftingGroup">
       <a href="https://venmo.com/Austin-Tisor" class="btn-primary">Venmo</a>
@@ -1432,10 +1500,11 @@
   </button>
   <div class="jump-menu-panel" id="jump-menu-panel" role="menu" aria-labelledby="jump-menu-trigger">
     <a role="menuitem" href="#sec-ourstory"  data-jump="ourstory">Our Story</a>
-    <a role="menuitem" href="#sec-accomm"    data-jump="accomm">Accommodations</a>
     <a role="menuitem" href="#sec-venue"     data-jump="venue">Venues</a>
     <a role="menuitem" href="#sec-itinerary" data-jump="itinerary">Itinerary</a>
     <a role="menuitem" href="#sec-menu"      data-jump="menu">Dinner Menu</a>
+    <a role="menuitem" href="#sec-accomm"    data-jump="accomm">Accommodations</a>
+    <a role="menuitem" href="#sec-rules"     data-jump="rules">Rules</a>
     <a role="menuitem" href="#sec-gifts"     data-jump="gifts">Gifts</a>
     <a role="menuitem" href="#sec-rsvp"      data-jump="rsvp">RSVP</a>
   </div>
@@ -1495,6 +1564,7 @@ const I18N_INDEX = {
       venue: 'Venues',
       itinerary: 'Itinerary',
       menu: 'Dinner Menu',
+      rules: 'Rules',
       gifts: 'Gifts',
       rsvp: 'RSVP',
     },
@@ -1508,6 +1578,15 @@ const I18N_INDEX = {
     accommodationsSub: 'Where to rest your head',
     accommodationsText: 'We have curated a selection of nearby hotels to make your stay as comfortable and memorable as possible. From luxurious retreats to charming boutique options, there is something for every guest.',
     accommodationsCta: 'View Recommended Hotels',
+    rulesTitle: 'Rules',
+    rulesSub: 'A few kind requests',
+    rulesText: 'To help us keep the day peaceful, safe, and focused on the ceremony, we kindly ask all guests to abide by the following requests.',
+    rulesItems: [
+      '<strong>Adults only.</strong> While we love your little ones, our wedding celebration will be an adults-only event.',
+      '<strong>Silence phones during the ceremony.</strong> Please keep phones silenced so everyone can be fully present.',
+      '<strong>No smoking or vaping.</strong> Smoking and vaping are not permitted anywhere on venue property.',
+      '<strong>No ceremony photos.</strong> Please refrain from taking photos during the ceremony; our photographer will capture those moments for everyone.',
+    ],
     venuesTitle: 'Ceremony & Reception Venues',
     venuesSub: 'Find your way to us',
     venueNames: ['Ceremony ~ Trinity Episcopal Church', 'Reception ~ El Paseo Restaurant'],
@@ -1545,7 +1624,7 @@ const I18N_INDEX = {
     menuNote: 'Please tell the restaurant staff if you have any allergies.',
     giftsTitle: 'Gifts',
     giftsSub: 'Your presence is our greatest gift',
-    giftsText: "Your love and company on our special day is truly the greatest gift of all. However, if you'd like to contribute to our honeymoon it would be deeply appreciated.",
+    giftsText: "Your love and company on our special day is truly the greatest gift of all. However, if you'd like to contribute to our honeymoon it would be deeply appreciated.\n\nFor our honeymoon, we're escaping to Japan for two weeks during the height of cherry blossom season. We'll be splitting our time between peaceful countryside hot springs and scenic sakura-filled destinations. Cozy train rides, incredible food, and plenty of shopping will be on the schedule.\n\nWe're incredibly excited to begin this next chapter together\u2014and grateful for everyone helping us get there.",
     rsvpTitle: 'RSVP',
     rsvpDeadline: 'Kindly respond by September 1st, 2026',
     rsvpGuestLabel: 'Number of Guests Attending',
@@ -1588,6 +1667,7 @@ const I18N_INDEX = {
       venue: 'Lugares',
       itinerary: 'Itinerario',
       menu: 'Menú',
+      rules: 'Reglas',
       gifts: 'Regalos',
       rsvp: 'Confirmación',
     },
@@ -1601,6 +1681,15 @@ const I18N_INDEX = {
     accommodationsSub: 'Dónde descansar',
     accommodationsText: 'Hemos seleccionado una lista de hoteles cercanos para que tu estancia sea lo más cómoda y memorable posible. Desde retiros de lujo hasta opciones boutique con encanto, hay algo para cada invitado.',
     accommodationsCta: 'Ver hoteles recomendados',
+    rulesTitle: 'Reglas',
+    rulesSub: 'Algunas peticiones amables',
+    rulesText: 'Para ayudarnos a mantener el día tranquilo, seguro y enfocado en la ceremonia, les pedimos amablemente a todos los invitados que respeten las siguientes peticiones.',
+    rulesItems: [
+      '<strong>Solo adultos.</strong> Aunque queremos mucho a sus pequeños, nuestra celebración de boda será solo para adultos.',
+      '<strong>Silencien sus teléfonos durante la ceremonia.</strong> Por favor, mantengan sus teléfonos en silencio para que todos puedan estar plenamente presentes.',
+      '<strong>No fumar ni vapear.</strong> No se permite fumar ni vapear en ninguna parte de la propiedad del lugar.',
+      '<strong>No tomar fotos durante la ceremonia.</strong> Por favor, eviten tomar fotos durante la ceremonia; nuestro fotógrafo capturará esos momentos para todos.',
+    ],
     venuesTitle: 'Ceremonia y recepción',
     venuesSub: 'Cómo llegar',
     venueNames: ['Ceremonia ~ Iglesia Episcopal Trinity', 'Recepción ~ Restaurante El Paseo'],
@@ -1638,7 +1727,7 @@ const I18N_INDEX = {
     menuNote: 'Por favor, informa al personal del restaurante si tienes alguna alergia.',
     giftsTitle: 'Regalos',
     giftsSub: 'Tu presencia es nuestro mejor regalo',
-    giftsText: 'Tu amor y compañía en nuestro día especial es, de verdad, el regalo más grande. Sin embargo, si te gustaría contribuir a nuestra luna de miel, lo agradeceríamos profundamente.',
+    giftsText: 'Tu amor y compañía en nuestro día especial es, de verdad, el regalo más grande. Sin embargo, si te gustaría contribuir a nuestra luna de miel, lo agradeceríamos profundamente.\n\nPara nuestra luna de miel, nos escaparemos a Japón por dos semanas durante el punto más alto de la temporada de cerezos en flor. Dividiremos nuestro tiempo entre tranquilos baños termales en el campo y destinos escénicos llenos de sakura. Tendremos paseos acogedores en tren, comida increíble y muchas compras en el itinerario.\n\nEstamos muy emocionados de comenzar juntos este próximo capítulo, y agradecidos con todos los que nos ayudan a llegar ahí.',
     rsvpTitle: 'Confirmación',
     rsvpDeadline: 'Por favor responde antes del 1 de septiembre de 2026',
     rsvpGuestLabel: 'Número de invitados que asistirán',
@@ -1718,6 +1807,12 @@ function applyIndexTranslations(lang) {
   setText('#sec-accomm .accomm-text', copy.accommodationsText);
   setText('#sec-accomm .btn-primary', copy.accommodationsCta);
 
+  setText('#sec-rules .section-title', copy.rulesTitle);
+  setText('#sec-rules .section-sub', copy.rulesSub);
+  setText('#sec-rules .rules-text', copy.rulesText);
+  const rulesItems = document.querySelectorAll('#sec-rules .rules-item');
+  rulesItems.forEach((el, i) => { if (copy.rulesItems[i]) el.innerHTML = copy.rulesItems[i]; });
+
   setText('#sec-venue .section-title', copy.venuesTitle);
   setText('#sec-venue .section-sub', copy.venuesSub);
   const venueNames = document.querySelectorAll('#sec-venue .venue-name');
@@ -1747,7 +1842,15 @@ function applyIndexTranslations(lang) {
 
   setText('#sec-gifts .section-title', copy.giftsTitle);
   setText('#sec-gifts .section-sub', copy.giftsSub);
-  setText('#sec-gifts .gifts-text', copy.giftsText);
+  const giftsText = document.querySelector('#sec-gifts .gifts-text');
+  if (giftsText) {
+    giftsText.innerHTML = '';
+    copy.giftsText.split('\n\n').forEach((paragraph, i) => {
+      if (i) giftsText.appendChild(document.createElement('br'));
+      if (i) giftsText.appendChild(document.createElement('br'));
+      giftsText.appendChild(document.createTextNode(paragraph));
+    });
+  }
 
   setText('#sec-rsvp #rsvp-title', copy.rsvpTitle);
   setText('#sec-rsvp .rsvp-deadline', copy.rsvpDeadline);
