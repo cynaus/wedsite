@@ -395,6 +395,51 @@
         0 0 18px rgba(255,235,198,0.18);
     }
 
+    .hero-countdown {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(58px, 1fr));
+      gap: clamp(0.45rem, 1.6vw, 0.8rem);
+      width: min(100%, 430px);
+      margin: 1.25rem auto 0;
+      color: var(--ivory);
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.68),
+        0 4px 12px rgba(0,0,0,0.62),
+        0 12px 30px rgba(0,0,0,0.48),
+        0 0 18px rgba(255,235,198,0.18);
+    }
+    .countdown-unit {
+      min-width: 0;
+      padding: 0.65rem 0.5rem 0.7rem;
+      border: 1px solid rgba(255, 238, 204, 0.36);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg,
+          rgba(255, 248, 226, 0.2) 0%,
+          rgba(66, 18, 13, 0.36) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 8px 24px rgba(12, 3, 2, 0.2);
+    }
+    .countdown-value {
+      display: block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.45rem, 4vw, 2rem);
+      font-weight: 700;
+      line-height: 1;
+      color: #fff7df;
+    }
+    .countdown-label {
+      display: block;
+      margin-top: 0.25rem;
+      font-family: 'Playfair Display SC', serif;
+      font-size: clamp(0.52rem, 1.7vw, 0.68rem);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(250,246,240,0.8);
+    }
+
     /* scroll indicator */
     .scroll-hint {
       position: absolute;
@@ -497,6 +542,20 @@
         opacity: 0.95;
       }
       .hero-location { letter-spacing: 0.22em; }
+      .hero-countdown {
+        grid-template-columns: repeat(4, minmax(46px, 1fr));
+        gap: 0.35rem;
+        width: min(100%, 350px);
+        margin-top: 1rem;
+      }
+      .countdown-unit {
+        padding: 0.55rem 0.3rem 0.6rem;
+        border-radius: 7px;
+      }
+      .countdown-label {
+        font-size: 0.5rem;
+        letter-spacing: 0.08em;
+      }
       .scroll-hint {
         bottom: 1.75rem;
         padding: 0.7rem 1.15rem 0.9rem;
@@ -1197,6 +1256,24 @@
     </h1>
     <p class="hero-date fancy hero-copy-fade">Saturday, February 27th, 2027</p>
     <p class="hero-location caps hero-copy-fade">Santa Barbara, California</p>
+    <div class="hero-countdown hero-copy-fade" id="hero-countdown" aria-live="polite">
+      <div class="countdown-unit">
+        <span class="countdown-value" data-countdown-value="days">0</span>
+        <span class="countdown-label" data-countdown-label="days">Days</span>
+      </div>
+      <div class="countdown-unit">
+        <span class="countdown-value" data-countdown-value="hours">0</span>
+        <span class="countdown-label" data-countdown-label="hours">Hours</span>
+      </div>
+      <div class="countdown-unit">
+        <span class="countdown-value" data-countdown-value="minutes">0</span>
+        <span class="countdown-label" data-countdown-label="minutes">Minutes</span>
+      </div>
+      <div class="countdown-unit">
+        <span class="countdown-value" data-countdown-value="seconds">0</span>
+        <span class="countdown-label" data-countdown-label="seconds">Seconds</span>
+      </div>
+    </div>
     <a href="#sec-rsvp" class="hero-cta hero-copy-fade" id="hero-rsvp-cta">RSVP</a>
   </div>
 
@@ -1642,6 +1719,12 @@ const I18N_INDEX = {
     heroDate: 'Saturday, February 27th, 2027',
     heroLocation: 'Santa Barbara, California',
     scrollHint: 'Scroll to continue',
+    countdownUnits: {
+      days: 'Days',
+      hours: 'Hours',
+      minutes: 'Minutes',
+      seconds: 'Seconds',
+    },
     heroCta: 'RSVP',
     jumpMenu: {
       aria: 'Jump to section',
@@ -1745,6 +1828,12 @@ const I18N_INDEX = {
     heroDate: 'Sábado, 27 de febrero de 2027',
     heroLocation: 'Santa Bárbara, California',
     scrollHint: 'Desliza para continuar',
+    countdownUnits: {
+      days: 'Días',
+      hours: 'Horas',
+      minutes: 'Min',
+      seconds: 'Seg',
+    },
     heroCta: 'Confirmar Asistencia',
     jumpMenu: {
       aria: 'Saltar a una sección',
@@ -1869,6 +1958,11 @@ function applyIndexTranslations(lang) {
   setText('.hero-location', copy.heroLocation);
   setText('.scroll-hint span', copy.scrollHint);
   setText('#hero-rsvp-cta', copy.heroCta);
+  if (copy.countdownUnits) {
+    Object.entries(copy.countdownUnits).forEach(([key, value]) => {
+      setText(`[data-countdown-label="${key}"]`, value);
+    });
+  }
 
   if (copy.jumpMenu) {
     const jumpTrigger = document.getElementById('jump-menu-trigger');
@@ -2067,7 +2161,41 @@ function initLanguageToggle() {
   });
 }
 
+const HERO_COUNTDOWN_TARGET_MS = new Date('2027-02-27T15:00:00-08:00').getTime();
+let heroCountdownTimer = null;
+
+function updateHeroCountdown() {
+  const countdown = document.getElementById('hero-countdown');
+  if (!countdown) return;
+
+  const remaining = Math.max(0, HERO_COUNTDOWN_TARGET_MS - Date.now());
+  const totalSeconds = Math.floor(remaining / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const values = { days, hours, minutes, seconds };
+
+  Object.entries(values).forEach(([key, value]) => {
+    const el = countdown.querySelector(`[data-countdown-value="${key}"]`);
+    if (el) el.textContent = String(value);
+  });
+
+  if (remaining === 0 && heroCountdownTimer) {
+    clearInterval(heroCountdownTimer);
+    heroCountdownTimer = null;
+  }
+}
+
+function startHeroCountdown() {
+  updateHeroCountdown();
+  if (!heroCountdownTimer) {
+    heroCountdownTimer = setInterval(updateHeroCountdown, 1000);
+  }
+}
+
 initLanguageToggle();
+startHeroCountdown();
 
 window.addEventListener('pageshow', (event) => {
   if (!event.persisted) return;
