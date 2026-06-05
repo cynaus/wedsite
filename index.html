@@ -226,20 +226,30 @@
       left: auto;
       right: auto;
       background: none;
+      overflow: visible;
       z-index: 3;
     }
     .hero-layer.arch-left { left: -3%; }
     .hero-layer.arch-right { right: -3%; left: auto; }
 
-    .hero-layer.arch-left {
-      background-image: url('img/garden-arch-left.png');
-      background-size: auto 100%;
+    .hero-layer.arch-left::before,
+    .hero-layer.arch-right::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      height: 100%;
+      aspect-ratio: 1 / 1;
+      transform: translate(-50%, -50%);
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
       background-position: center center;
     }
-    .hero-layer.arch-right {
+    .hero-layer.arch-left::before {
+      background-image: url('img/garden-arch-left.png');
+    }
+    .hero-layer.arch-right::before {
       background-image: url('img/garden-arch-right.png');
-      background-size: auto 100%;
-      background-position: center center;
     }
     .hero-layer.bushes {
       background-image: url('img/bushes.png');
@@ -650,8 +660,8 @@
       }
       .hero-layer.arch-left { left: -9%; }
       .hero-layer.arch-right { right: -9%; }
-      .hero-layer.arch-left,
-      .hero-layer.arch-right { background-size: auto 92%; }
+      .hero-layer.arch-left::before,
+      .hero-layer.arch-right::before { height: 92%; }
       .hero-layer.bushes { background-size: auto 34vh; }
     }
 
@@ -1588,7 +1598,7 @@
       <!-- Number of guests -->
       <div class="form-group">
         <label class="form-label">
-          Number of Guests Attending
+          Number of Guests
           <span class="form-note">All guests must be on the official guest list to be seated.</span>
         </label>
         <div class="stepper">
@@ -1684,6 +1694,28 @@
 document.documentElement.style.setProperty('--hero-h', window.innerHeight + 'px');
 
 const returningFromHotels = new URLSearchParams(window.location.search).get('from') === 'hotels';
+const CRITICAL_HERO_IMAGE_URLS = [
+  'img/garden-arch-left.png',
+  'img/garden-arch-right.png',
+];
+
+function decodeImage(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      if (typeof img.decode === 'function') {
+        img.decode().catch(() => {}).finally(resolve);
+      } else {
+        resolve();
+      }
+    };
+    img.onerror = resolve;
+    img.src = url;
+  });
+}
+
+const criticalHeroImagesReady = Promise.all(CRITICAL_HERO_IMAGE_URLS.map(decodeImage));
 
 if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
@@ -1796,7 +1828,7 @@ const I18N_INDEX = {
     giftsText: "Your love and company on our special day is truly the greatest gift of all. However, if you'd like to contribute to our honeymoon it would be deeply appreciated.\n\nFor our honeymoon, we're escaping to Japan for two weeks during the height of cherry blossom season. We'll be splitting our time between peaceful countryside hot springs and scenic sakura-filled destinations. Cozy train rides, incredible food, and plenty of shopping will be on the schedule.\n\nWe're incredibly excited to begin this next chapter together\u2014and grateful for everyone helping us get there.",
     rsvpTitle: 'RSVP',
     rsvpDeadline: 'Kindly respond by September 1st, 2026',
-    rsvpGuestLabel: 'Number of Guests Attending',
+    rsvpGuestLabel: 'Number of Guests',
     rsvpGuestNote: 'All guests must be on the official guest list to be seated.',
     rsvpNamesLabel: 'Full Name(s)',
     rsvpResponseLabel: 'Response',
@@ -1905,7 +1937,7 @@ const I18N_INDEX = {
     giftsText: 'Tu amor y compañía en nuestro día especial es, de verdad, el regalo más grande. Sin embargo, si te gustaría contribuir a nuestra luna de miel, lo agradeceríamos profundamente.\n\nPara nuestra luna de miel, nos escaparemos a Japón por dos semanas durante el punto más alto de la temporada de cerezos en flor. Dividiremos nuestro tiempo entre tranquilos baños termales en el campo y destinos escénicos llenos de sakura. Tendremos paseos acogedores en tren, comida increíble y muchas compras en el itinerario.\n\nEstamos muy emocionados de comenzar juntos este próximo capítulo, y agradecidos con todos los que nos ayudan a llegar ahí.',
     rsvpTitle: 'Confirmación',
     rsvpDeadline: 'Por favor responde antes del 1 de septiembre de 2026',
-    rsvpGuestLabel: 'Número de invitados que asistirán',
+    rsvpGuestLabel: 'Número de invitados',
     rsvpGuestNote: 'Todos los invitados deben estar en la lista oficial para poder sentarse.',
     rsvpNamesLabel: 'Nombre(s) completo(s)',
     rsvpResponseLabel: 'Respuesta',
@@ -2365,6 +2397,34 @@ buildLetterSpans('name-austin', 'Austin');
     return magnitude;
   }
 
+  function bindLayerElements() {
+    LAYERS.forEach((layer) => {
+      layer.el = document.getElementById(layer.id);
+    });
+    HERO_CONTENT.el = document.getElementById(HERO_CONTENT.id);
+  }
+
+  function setInitialTransforms() {
+    updateViewportCache();
+    bindLayerElements();
+
+    LAYERS.forEach((layer) => {
+      if (!layer.el) return;
+
+      if (layer.isArch) {
+        const closedX = px(getArchClosedX(layer.closedXSign || 0));
+        const startScale = layer.startScale || 1;
+        layer.el.style.transform = `translate3d(${closedX}px, 0, 0) scale(${startScale})`;
+      } else {
+        layer.el.style.transform = 'translate3d(0, 0, 0) scale(1)';
+      }
+    });
+
+    if (HERO_CONTENT.el) {
+      HERO_CONTENT.el.style.transform = 'translate3d(0, 0, 0)';
+    }
+  }
+
   function tick(ts) {
     if (!entranceStart) entranceStart = ts;
     const elapsed = ts - entranceStart;
@@ -2475,10 +2535,7 @@ buildLetterSpans('name-austin', 'Austin');
 
     updateViewportCache();
 
-    LAYERS.forEach((layer) => {
-      layer.el = document.getElementById(layer.id);
-    });
-    HERO_CONTENT.el = document.getElementById(HERO_CONTENT.id);
+    bindLayerElements();
 
     // Keep viewport cache fresh so tick() never reads window.innerWidth.
     window.addEventListener('resize', updateViewportCache, { passive: true });
@@ -2530,7 +2587,13 @@ buildLetterSpans('name-austin', 'Austin');
     }, { threshold: 0, rootMargin: '150px' });
     obs.observe(heroEl);
   };
+
+  window.prepareHeroParallaxInitialState = function () {
+    if (!initialized) setInitialTransforms();
+  };
 })();
+
+window.prepareHeroParallaxInitialState?.();
 
 // ─────────────────────────────────────
 // ENVELOPE OPEN
@@ -2568,13 +2631,15 @@ function openEnvelope() {
 
   // 3. Fade envelope screen, reveal hero
   setTimeout(() => {
-    screen.classList.add('hide');
-    hero.classList.add('visible');
-    initHeroParallax();
-    startGoldenMotes();
-    revealLetters('name-cynthia', 250);
-    revealLetters('name-ampersand', 650);
-    revealLetters('name-austin', 820);
+    criticalHeroImagesReady.finally(() => {
+      screen.classList.add('hide');
+      hero.classList.add('visible');
+      initHeroParallax();
+      startGoldenMotes();
+      revealLetters('name-cynthia', 250);
+      revealLetters('name-ampersand', 650);
+      revealLetters('name-austin', 820);
+    });
   }, 3900);
 
   // 4. Start rose bloom sprites once the hero has settled
