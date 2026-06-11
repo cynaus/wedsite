@@ -314,8 +314,7 @@
       font-size: clamp(0.8rem, 2vw, 1.0rem);
       font-weight: 700;
       letter-spacing: 0.2em;
-      color: #f6efe3;
-      -webkit-text-stroke: 0.35px rgba(92, 58, 35, 0.45);
+      color: #fff;
       margin-bottom: 0.75rem;
       text-shadow:
         0 1px 2px rgba(0,0,0,0.68),
@@ -328,7 +327,7 @@
       font-family: 'Playfair Display SC', serif;
       font-size: clamp(1rem, 3vw, 1.4rem);
       font-weight: 700;
-      color: var(--ivory-dark);
+      color: #fff;
       display: block;
       margin-bottom: 0.3em;
       letter-spacing: 0.1em;
@@ -407,9 +406,9 @@
 
     .hero-countdown {
       display: grid;
-      grid-template-columns: repeat(4, minmax(58px, 1fr));
-      gap: clamp(0.45rem, 1.6vw, 0.8rem);
-      width: min(100%, 430px);
+      grid-template-columns: repeat(4, minmax(52px, 1fr));
+      gap: clamp(0.3rem, 1vw, 0.55rem);
+      width: min(100%, 390px);
       margin: 1.25rem auto 0;
       color: var(--ivory);
       text-shadow:
@@ -421,33 +420,23 @@
     .countdown-unit {
       min-width: 0;
       padding: 0.65rem 0.5rem 0.7rem;
-      border: 1px solid rgba(255, 238, 204, 0.36);
-      border-radius: 8px;
-      background:
-        linear-gradient(180deg,
-          rgba(255, 248, 226, 0.2) 0%,
-          rgba(66, 18, 13, 0.36) 100%);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.16),
-        0 8px 24px rgba(12, 3, 2, 0.2);
     }
     .countdown-value {
       display: block;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.45rem, 4vw, 2rem);
+      font-family: 'Playfair Display SC', serif;
+      font-size: clamp(2.175rem, 6vw, 3rem);
       font-weight: 700;
       line-height: 1;
-      color: #fff7df;
+      color: #fff;
     }
     .countdown-label {
       display: block;
-      margin-top: 0.25rem;
-      font-family: 'Playfair Display SC', serif;
-      font-size: clamp(0.52rem, 1.7vw, 0.68rem);
+      margin-top: 0.5rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(0.78rem, 2.55vw, 1.02rem);
       font-weight: 700;
       letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(250,246,240,0.8);
+      color: #fff;
     }
 
     /* scroll indicator */
@@ -553,17 +542,16 @@
       }
       .hero-location { letter-spacing: 0.22em; }
       .hero-countdown {
-        grid-template-columns: repeat(4, minmax(46px, 1fr));
-        gap: 0.35rem;
-        width: min(100%, 350px);
+        grid-template-columns: repeat(4, minmax(42px, 1fr));
+        gap: 0.25rem;
+        width: min(100%, 318px);
         margin-top: 1rem;
       }
       .countdown-unit {
         padding: 0.55rem 0.3rem 0.6rem;
-        border-radius: 7px;
       }
       .countdown-label {
-        font-size: 0.5rem;
+        font-size: 0.75rem;
         letter-spacing: 0.08em;
       }
       .scroll-hint {
@@ -999,7 +987,7 @@
     .rsvp-deadline {
       text-align: center;
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+      font-size: clamp(1.2rem, 3.125vw, 1.45rem);
       color: var(--gold);
       font-style: italic;
       margin-bottom: 2.5rem;
@@ -1014,7 +1002,7 @@
       font-family: 'Playfair Display SC', serif;
       font-size: 1.0rem;
       letter-spacing: 0.18em;
-      color: rgba(250,246,240,0.6);
+      color: #fff;
       margin-bottom: 0.5rem;
     }
     .form-label .form-note {
@@ -1023,7 +1011,7 @@
       font-size: 0.95rem;
       letter-spacing: 0.05em;
       text-transform: none;
-      color: rgba(250,246,240,0.35);
+      color: rgba(250,246,240,0.6);
       margin-top: 0.15rem;
     }
 
@@ -1752,10 +1740,10 @@ const I18N_INDEX = {
     heroLocation: 'Santa Barbara, California',
     scrollHint: 'Scroll to continue',
     countdownUnits: {
-      days: 'Days',
-      hours: 'Hours',
-      minutes: 'Minutes',
-      seconds: 'Seconds',
+      days: { one: 'Day', other: 'Days' },
+      hours: { one: 'Hour', other: 'Hours' },
+      minutes: { one: 'Minute', other: 'Minutes' },
+      seconds: { one: 'Second', other: 'Seconds' },
     },
     heroCta: 'RSVP',
     jumpMenu: {
@@ -1861,10 +1849,10 @@ const I18N_INDEX = {
     heroLocation: 'Santa Bárbara, California',
     scrollHint: 'Desliza para continuar',
     countdownUnits: {
-      days: 'Días',
-      hours: 'Horas',
-      minutes: 'Min',
-      seconds: 'Seg',
+      days: { one: 'Día', other: 'Días' },
+      hours: { one: 'Hora', other: 'Horas' },
+      minutes: { one: 'Min', other: 'Min' },
+      seconds: { one: 'Seg', other: 'Seg' },
     },
     heroCta: 'Confirmar Asistencia',
     jumpMenu: {
@@ -1991,8 +1979,9 @@ function applyIndexTranslations(lang) {
   setText('.scroll-hint span', copy.scrollHint);
   setText('#hero-rsvp-cta', copy.heroCta);
   if (copy.countdownUnits) {
-    Object.entries(copy.countdownUnits).forEach(([key, value]) => {
-      setText(`[data-countdown-label="${key}"]`, value);
+    Object.entries(copy.countdownUnits).forEach(([key, forms]) => {
+      const value = Number(document.querySelector(`[data-countdown-value="${key}"]`)?.textContent);
+      setText(`[data-countdown-label="${key}"]`, value === 1 ? forms.one : forms.other);
     });
   }
 
@@ -2211,6 +2200,10 @@ function updateHeroCountdown() {
   Object.entries(values).forEach(([key, value]) => {
     const el = countdown.querySelector(`[data-countdown-value="${key}"]`);
     if (el) el.textContent = String(value);
+
+    const forms = (I18N_INDEX[currentLanguage] || I18N_INDEX.en).countdownUnits[key];
+    const label = countdown.querySelector(`[data-countdown-label="${key}"]`);
+    if (label) label.textContent = value === 1 ? forms.one : forms.other;
   });
 
   if (remaining === 0 && heroCountdownTimer) {
