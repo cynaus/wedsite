@@ -6,17 +6,56 @@
   <meta name="robots" content="noindex">
   <title>The Wedding of Cynthia & Austin</title>
 
+  <script>
+    // Chromium exposes wasDiscarded. Firefox and WebKit do not, so retain the
+    // last lifecycle state and scroll position in this tab's session storage.
+    (() => {
+      const keys = {
+        opened: 'weddingInvitationOpened',
+        lifecycle: 'weddingInvitationLifecycle',
+        scrollY: 'weddingInvitationScrollY',
+      };
+      let resumingOpenedInvitation = false;
+      let resumedScrollY = null;
+
+      try {
+        const navigationEntry = performance.getEntriesByType('navigation')[0];
+        const navigationType = navigationEntry?.type;
+        const wasDiscarded = document.wasDiscarded === true;
+        const explicitReload = navigationType === 'reload' && !wasDiscarded;
+        const invitationWasOpened = sessionStorage.getItem(keys.opened) === 'true';
+        const storedLifecycle = sessionStorage.getItem(keys.lifecycle);
+
+        resumingOpenedInvitation =
+          !explicitReload &&
+          invitationWasOpened &&
+          (wasDiscarded || storedLifecycle === 'hidden');
+
+        if (!resumingOpenedInvitation) {
+          sessionStorage.removeItem(keys.opened);
+        }
+
+        const savedScrollValue = sessionStorage.getItem(keys.scrollY);
+        const savedScrollY = Number(savedScrollValue);
+        if (savedScrollValue !== null && Number.isFinite(savedScrollY) && savedScrollY >= 0) {
+          resumedScrollY = savedScrollY;
+        }
+      } catch (_) {}
+
+      window.__resumingOpenedInvitation = resumingOpenedInvitation;
+      window.__resumedInvitationScrollY = resumedScrollY;
+      window.__weddingInvitationStorageKeys = keys;
+
+      if (resumingOpenedInvitation) {
+        document.documentElement.classList.add('resume-opened-invitation');
+      }
+    })();
+  </script>
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display+SC:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
-
-  <!-- Preload hero parallax images so they are ready before the envelope opens -->
-  <link rel="preload" href="img/sky-clouds.png" as="image">
-  <link rel="preload" href="img/bg-church.png" as="image">
-  <link rel="preload" href="img/garden-arch-left.png" as="image">
-  <link rel="preload" href="img/garden-arch-right.png" as="image">
-  <link rel="preload" href="img/bushes.png" as="image">
 
   <!-- Shared styles -->
   <link rel="stylesheet" href="css/styles.css">
@@ -204,7 +243,6 @@
     .hero-layer.arch-left,
     .hero-layer.arch-right { will-change: transform; }
     .hero-layer.sky {
-      background-image: url('img/sky-clouds.png');
       background-position: center top;
       background-size: cover;
       z-index: 0;
@@ -212,7 +250,6 @@
          doesn't run a filter pass on the largest transformed layer. */
     }
     .hero-layer.church {
-      background-image: url('img/bg-church.png');
       background-size: 1024px auto;
       background-position: center bottom;
       z-index: 1;
@@ -245,19 +282,32 @@
       background-size: 100% 100%;
       background-position: center center;
     }
-    .hero-layer.arch-left::before {
-      background-image: url('img/garden-arch-left.png');
-    }
-    .hero-layer.arch-right::before {
-      background-image: url('img/garden-arch-right.png');
-    }
     .hero-layer.bushes {
-      background-image: url('img/bushes.png');
       background-repeat: repeat-x;
       background-size: auto 42vh;
       background-position: center 100%;
       z-index: 4;
       transform-origin: center bottom;
+    }
+    html.hero-assets-priority .hero-layer.sky,
+    html.hero-assets-ready .hero-layer.sky {
+      background-image: url('img/sky-clouds.webp');
+    }
+    html.hero-assets-priority .hero-layer.church,
+    html.hero-assets-ready .hero-layer.church {
+      background-image: url('img/bg-church.webp');
+    }
+    html.hero-assets-priority .hero-layer.arch-left::before,
+    html.hero-assets-ready .hero-layer.arch-left::before {
+      background-image: url('img/garden-arch-left.webp');
+    }
+    html.hero-assets-priority .hero-layer.arch-right::before,
+    html.hero-assets-ready .hero-layer.arch-right::before {
+      background-image: url('img/garden-arch-right.webp');
+    }
+    html.hero-assets-priority .hero-layer.bushes,
+    html.hero-assets-ready .hero-layer.bushes {
+      background-image: url('img/bushes.webp');
     }
 
     .hero-overlay {
@@ -1117,6 +1167,29 @@
       margin-bottom: 0.5rem;
     }
     #rsvp-success p { color: rgba(250,246,240,0.55); font-size: 0.85rem; }
+
+    /* Avoid replaying or briefly flashing the intro after a discarded tab reloads. */
+    html.resume-opened-invitation #envelope-screen {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: none;
+    }
+    html.resume-opened-invitation #hero {
+      opacity: 1;
+      transition: none;
+    }
+    html.resume-opened-invitation #hero .hero-copy-fade,
+    html.resume-opened-invitation #hero .scroll-hint {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+    html.resume-opened-invitation .letter-span {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
   </style>
 </head>
 <body>
@@ -1179,7 +1252,7 @@
       <g class="flap-group flap-back-layer" id="envFlapBackGroup">
         <polygon class="flap-back-static" points="20,80 210,185 400,80"/>
         <polygon class="env-paper-overlay" points="20,80 210,185 400,80"/>
-        <image class="seal-img" href="img/wax-seal.png" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
+        <image class="seal-img" href="img/wax-seal.webp" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
       </g>
 
       <!-- invitation starts inside envelope -->
@@ -1219,7 +1292,7 @@
         <polygon class="env-paper-overlay" points="20,80 210,185 400,80"/>
         <g class="seal-group" id="sealGroup">
           <circle cx="210" cy="185" r="24" fill="#8a1c1c"/>
-          <image class="seal-img" href="img/wax-seal.png" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
+          <image class="seal-img" href="img/wax-seal.webp" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
           <text class="seal-monogram" x="210" y="186">C&amp;A</text>
         </g>
       </g>
@@ -1534,6 +1607,7 @@
     </p>
     <ul class="rules-list">
       <li class="rules-item"><strong>Invitation Only.</strong> To help us plan appropriately, please attend only if your name is included on the invitation.</li>
+      <li class="rules-item"><strong>Formal Attire Required.</strong> We kindly ask all guests to dress in formal attire for the celebration.</li>
       <li class="rules-item"><strong>Silence phones during the ceremony.</strong> Please keep phones silenced so everyone can be fully present.</li>
       <li class="rules-item"><strong>No smoking or vaping.</strong> Smoking and vaping are not permitted anywhere on venue property.</li>
       <li class="rules-item"><strong>No ceremony photos.</strong> Please refrain from taking photos during the ceremony; our photographer will capture those moments for everyone.</li>
@@ -1559,7 +1633,7 @@
 
       We are looking forward to celebrating the start of married life together with a trip to Japan, where we'll enjoy beautiful scenery, romantic outings, and creating lifelong memories.
 
-      We're incredibly excited to begin this next chapter together&mdash;and grateful for everyone helping us get there.
+      We're incredibly excited to begin this next chapter together and grateful for everyone helping us get there.
     </p>
     <div class="radio-group" id="giftingGroup">
       <a href="https://venmo.com/Austin-Tisor" class="btn-primary">Venmo</a>
@@ -1682,15 +1756,26 @@
 document.documentElement.style.setProperty('--hero-h', window.innerHeight + 'px');
 
 const returningFromHotels = new URLSearchParams(window.location.search).get('from') === 'hotels';
-const CRITICAL_HERO_IMAGE_URLS = [
-  'img/garden-arch-left.png',
-  'img/garden-arch-right.png',
+const resumingOpenedInvitation = window.__resumingOpenedInvitation === true;
+const resumedInvitationScrollY = window.__resumedInvitationScrollY;
+const invitationStorageKeys = window.__weddingInvitationStorageKeys;
+const HERO_IMAGE_URLS = [
+  'img/sky-clouds.webp',
+  'img/bg-church.webp',
+  'img/garden-arch-left.webp',
+  'img/garden-arch-right.webp',
+  'img/bushes.webp',
 ];
 
-function decodeImage(url) {
+let heroImageElements = [];
+let heroImagesReadyPromise = null;
+
+function loadAndDecodeImage(url, priority) {
   return new Promise((resolve) => {
     const img = new Image();
+    img.fetchPriority = priority;
     img.decoding = 'async';
+    heroImageElements.push(img);
     img.onload = () => {
       if (typeof img.decode === 'function') {
         img.decode().catch(() => {}).finally(resolve);
@@ -1703,7 +1788,35 @@ function decodeImage(url) {
   });
 }
 
-const criticalHeroImagesReady = Promise.all(CRITICAL_HERO_IMAGE_URLS.map(decodeImage));
+function prepareHeroImages(priority = 'low') {
+  if (heroImagesReadyPromise) {
+    if (
+      priority === 'high' &&
+      !document.documentElement.classList.contains('hero-assets-ready')
+    ) {
+      heroImageElements.forEach((img) => { img.fetchPriority = 'high'; });
+      document.documentElement.classList.add('hero-assets-priority');
+    }
+    return heroImagesReadyPromise;
+  }
+
+  heroImagesReadyPromise = Promise.all(
+    HERO_IMAGE_URLS.map((url) => loadAndDecodeImage(url, priority))
+  ).finally(() => {
+    document.documentElement.classList.remove('hero-assets-priority');
+    document.documentElement.classList.add('hero-assets-ready');
+  });
+  if (priority === 'high') {
+    document.documentElement.classList.add('hero-assets-priority');
+  }
+  return heroImagesReadyPromise;
+}
+
+// Give the envelope, seal, paper texture, CSS, and fonts the first pass at the
+// network. The hero then warms in the background during the opening animation.
+const heroWarmupTimer = setTimeout(() => {
+  prepareHeroImages('low');
+}, 1000);
 
 if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
@@ -1711,12 +1824,43 @@ if ('scrollRestoration' in history) {
 window.addEventListener('load', () => {
   if (returningFromHotels) {
     document.getElementById('sec-accomm')?.scrollIntoView({ behavior: 'instant' });
-  } else {
+  } else if (resumingOpenedInvitation && resumedInvitationScrollY !== null) {
+    window.scrollTo(0, resumedInvitationScrollY);
+  } else if (!resumingOpenedInvitation) {
     window.scrollTo(0, 0);
   }
 });
 window.addEventListener('pageshow', () => {
-  if (!returningFromHotels) window.scrollTo(0, 0);
+  if (!returningFromHotels && !resumingOpenedInvitation) window.scrollTo(0, 0);
+});
+
+function storeInvitationLifecycle(state) {
+  try {
+    sessionStorage.setItem(invitationStorageKeys.lifecycle, state);
+    sessionStorage.setItem(
+      invitationStorageKeys.scrollY,
+      String(Math.max(0, window.scrollY || window.pageYOffset || 0))
+    );
+  } catch (_) {}
+}
+
+let invitationLifecycleTerminating = false;
+
+document.addEventListener('visibilitychange', () => {
+  if (invitationLifecycleTerminating) return;
+  storeInvitationLifecycle(document.visibilityState === 'hidden' ? 'hidden' : 'active');
+});
+
+// A regular reload/navigation should not be mistaken for a suspended-tab resume.
+window.addEventListener('pagehide', (event) => {
+  if (!event.persisted) {
+    invitationLifecycleTerminating = true;
+    storeInvitationLifecycle('unloading');
+  }
+});
+window.addEventListener('pageshow', () => {
+  invitationLifecycleTerminating = false;
+  storeInvitationLifecycle('active');
 });
 
 // ─────────────────────────────────────
@@ -1772,6 +1916,7 @@ const I18N_INDEX = {
     rulesText: 'To help us keep the day peaceful, safe, and focused on the ceremony, we kindly ask all guests to abide by the following requests.',
     rulesItems: [
       '<strong>Invitation Only.</strong> To help us plan appropriately, please attend only if your name is included on the invitation.',
+      '<strong>Formal Attire Required.</strong> We kindly ask all guests to dress in formal attire for the celebration.',
       '<strong>Silence phones during the ceremony.</strong> Please keep phones silenced so everyone can be fully present.',
       '<strong>No smoking or vaping.</strong> Smoking and vaping are not permitted anywhere on venue property.',
       '<strong>No ceremony photos.</strong> Please refrain from taking photos during the ceremony; our photographer will capture those moments for everyone.',
@@ -1813,7 +1958,7 @@ const I18N_INDEX = {
     menuNote: 'Please tell the restaurant staff if you have any allergies.',
     giftsTitle: 'Gifts',
     giftsSub: 'Your presence is our greatest gift',
-    giftsText: "Your love and company on our special day is truly the greatest gift of all. However, if you'd like to contribute to our honeymoon it would be deeply appreciated.\n\nWe are looking forward to celebrating the start of married life together with a trip to Japan, where we'll enjoy beautiful scenery, romantic outings, and creating lifelong memories.\n\nWe're incredibly excited to begin this next chapter together\u2014and grateful for everyone helping us get there.",
+    giftsText: "Your love and company on our special day is truly the greatest gift of all. However, if you'd like to contribute to our honeymoon it would be deeply appreciated.\n\nWe are looking forward to celebrating the start of married life together with a trip to Japan, where we'll enjoy beautiful scenery, romantic outings, and creating lifelong memories.\n\nWe're incredibly excited to begin this next chapter together and grateful for everyone helping us get there.",
     rsvpTitle: 'RSVP',
     rsvpDeadline: 'Kindly respond by September 1st, 2026',
     rsvpGuestLabel: 'Number of Guests',
@@ -1881,6 +2026,7 @@ const I18N_INDEX = {
     rulesText: 'Para ayudarnos a mantener el día tranquilo, seguro y enfocado en la ceremonia, les pedimos amablemente a todos los invitados que respeten las siguientes peticiones.',
     rulesItems: [
       '<strong>Solo por invitación.</strong> Para ayudarnos a planificar adecuadamente, por favor asista solo si su nombre está incluido en la invitación.',
+      '<strong>Se requiere vestimenta formal.</strong> Les pedimos amablemente a todos los invitados que vistan de manera formal para la celebración.',
       '<strong>Silencien sus teléfonos durante la ceremonia.</strong> Por favor, mantengan sus teléfonos en silencio para que todos puedan estar plenamente presentes.',
       '<strong>No fumar ni vapear.</strong> No se permite fumar ni vapear en ninguna parte de la propiedad del lugar.',
       '<strong>No tomar fotos durante la ceremonia.</strong> Por favor, eviten tomar fotos durante la ceremonia; nuestro fotógrafo capturará esos momentos para todos.',
@@ -2592,9 +2738,20 @@ window.prepareHeroParallaxInitialState?.();
 // ENVELOPE OPEN
 // ─────────────────────────────────────
 let envelopeOpened = false;
+
+function rememberEnvelopeOpened() {
+  try {
+    sessionStorage.setItem(invitationStorageKeys.opened, 'true');
+    sessionStorage.setItem(invitationStorageKeys.lifecycle, 'active');
+  } catch (_) {}
+}
+
 function openEnvelope() {
   if (envelopeOpened) return;
   envelopeOpened = true;
+  rememberEnvelopeOpened();
+  clearTimeout(heroWarmupTimer);
+  prepareHeroImages('high');
 
   const envWrap = document.getElementById('envWrap');
   const flapFrontGroup = document.getElementById('envFlapFrontGroup');
@@ -2624,7 +2781,7 @@ function openEnvelope() {
 
   // 3. Fade envelope screen, reveal hero
   setTimeout(() => {
-    criticalHeroImagesReady.finally(() => {
+    prepareHeroImages('high').finally(() => {
       screen.classList.add('hide');
       hero.classList.add('visible');
       initHeroParallax();
@@ -2645,43 +2802,40 @@ function openEnvelope() {
 function startGoldenMotes() {
   const canvas = document.getElementById('petalCanvas');
   const ctx = canvas.getContext('2d');
-  let W, H, motes = [], raf;
+  const goldPalettes = [
+    [255, 248, 196, 255, 196, 66, 218, 133, 20],
+    [255, 252, 218, 255, 213, 92, 232, 155, 35],
+    [255, 244, 176, 255, 181, 45, 196, 105, 12],
+  ];
+  let W, H, dpr, motes = [], raf;
   let isRunning = false;
 
   function resize() {
-    W = canvas.width = canvas.offsetWidth;
-    H = canvas.height = canvas.offsetHeight;
+    W = canvas.offsetWidth;
+    H = canvas.offsetHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     motes = createMotes();
   }
   window.addEventListener('resize', resize);
 
   function createMote() {
-    const edgeBias = Math.random();
     const isHeroMote = Math.random() < 0.16;
-    let x;
-    let y;
-
-    if (edgeBias < 0.35) {
-      x = Math.random() * W * 0.18;
-      y = Math.random() * H;
-    } else if (edgeBias < 0.7) {
-      x = W - (Math.random() * W * 0.18);
-      y = Math.random() * H;
-    } else {
-      x = Math.random() * W;
-      y = H * 0.62 + (Math.random() * H * 0.3);
-    }
 
     return {
-      x,
-      y,
+      x: Math.random() * W,
+      y: Math.random() * H,
       r: isHeroMote ? 0.95 + Math.random() * 1.15 : 0.38 + Math.random() * 0.95,
       glow: isHeroMote ? 7.2 + Math.random() * 2.2 : 5.2 + Math.random() * 1.8,
       intensity: isHeroMote ? 1.22 : 1,
+      palette: goldPalettes[Math.floor(Math.random() * goldPalettes.length)],
       vx: (-0.05 + Math.random() * 0.1) * (isHeroMote ? 0.07 : 0.1),
       vy: (-0.04 - Math.random() * 0.16) * (isHeroMote ? 0.07 : 0.1),
-      twinkleSpeed: (isHeroMote ? 0.00055 : 0.0008) + Math.random() * 0.002,
+      twinkleSpeed: (isHeroMote ? 0.0011 : 0.0015) + Math.random() * 0.0024,
       twinkleOffset: Math.random() * Math.PI * 2,
+      glint: isHeroMote && Math.random() < 0.72,
     };
   }
 
@@ -2693,14 +2847,17 @@ function startGoldenMotes() {
   resize();
 
   function drawMote(mote, ts) {
-    const twinkle = (Math.sin((ts * mote.twinkleSpeed) + mote.twinkleOffset) + 1) * 0.5;
-    const alpha = Math.min(0.96, (0.58 + twinkle * 0.34) * mote.intensity);
-    const glowRadius = mote.r * mote.glow;
+    const wave = (Math.sin((ts * mote.twinkleSpeed) + mote.twinkleOffset) + 1) * 0.5;
+    const pulse = Math.pow(wave, 2.4);
+    const alpha = Math.min(1, (0.46 + pulse * 0.54) * mote.intensity);
+    const glowRadius = mote.r * mote.glow * (0.86 + pulse * 0.28);
+    const [coreR, coreG, coreB, midR, midG, midB, edgeR, edgeG, edgeB] = mote.palette;
     const gradient = ctx.createRadialGradient(mote.x, mote.y, 0, mote.x, mote.y, glowRadius);
-    gradient.addColorStop(0, `rgba(255, 252, 232, ${alpha})`);
-    gradient.addColorStop(0.18, `rgba(255, 233, 171, ${alpha * 0.82})`);
-    gradient.addColorStop(0.48, `rgba(238, 196, 102, ${alpha * 0.42})`);
-    gradient.addColorStop(1, 'rgba(201, 168, 76, 0)');
+    gradient.addColorStop(0, `rgba(${coreR}, ${coreG}, ${coreB}, ${alpha})`);
+    gradient.addColorStop(0.12, `rgba(${midR}, ${midG}, ${midB}, ${alpha * 0.96})`);
+    gradient.addColorStop(0.38, `rgba(${midR}, ${midG}, ${midB}, ${alpha * 0.62})`);
+    gradient.addColorStop(0.72, `rgba(${edgeR}, ${edgeG}, ${edgeB}, ${alpha * 0.22})`);
+    gradient.addColorStop(1, `rgba(${edgeR}, ${edgeG}, ${edgeB}, 0)`);
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
@@ -2708,6 +2865,30 @@ function startGoldenMotes() {
     ctx.beginPath();
     ctx.arc(mote.x, mote.y, glowRadius, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.fillStyle = `rgba(255, 252, 222, ${Math.min(1, alpha * 1.12)})`;
+    ctx.beginPath();
+    ctx.arc(mote.x, mote.y, Math.max(0.55, mote.r * (0.72 + pulse * 0.2)), 0, Math.PI * 2);
+    ctx.fill();
+
+    if (mote.glint && pulse > 0.48) {
+      const glintAlpha = (pulse - 0.48) * 1.35;
+      const glintLength = glowRadius * (0.7 + pulse * 0.45);
+      const glintGradient = ctx.createLinearGradient(
+        mote.x - glintLength, mote.y, mote.x + glintLength, mote.y
+      );
+      glintGradient.addColorStop(0, 'rgba(255, 190, 55, 0)');
+      glintGradient.addColorStop(0.5, `rgba(255, 235, 145, ${glintAlpha})`);
+      glintGradient.addColorStop(1, 'rgba(255, 190, 55, 0)');
+      ctx.strokeStyle = glintGradient;
+      ctx.lineWidth = 0.55;
+      ctx.beginPath();
+      ctx.moveTo(mote.x - glintLength, mote.y);
+      ctx.lineTo(mote.x + glintLength, mote.y);
+      ctx.moveTo(mote.x, mote.y - glintLength * 0.72);
+      ctx.lineTo(mote.x, mote.y + glintLength * 0.72);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -3043,6 +3224,9 @@ async function submitRSVP(e) {
 function skipEnvelopeInstantly() {
   if (envelopeOpened) return;
   envelopeOpened = true;
+  rememberEnvelopeOpened();
+  clearTimeout(heroWarmupTimer);
+  prepareHeroImages('high');
 
   const envWrap   = document.getElementById('envWrap');
   const flapFront = document.getElementById('envFlapFrontGroup');
@@ -3071,13 +3255,15 @@ function skipEnvelopeInstantly() {
   startRoseBlooms();
 }
 
-if (returningFromHotels) {
+if (returningFromHotels || resumingOpenedInvitation) {
   skipEnvelopeInstantly();
-  // Strip ?from=hotels so a page refresh restarts the envelope animation
-  const cleanUrl = new URL(window.location.href);
-  cleanUrl.searchParams.delete('from');
-  const qs = cleanUrl.searchParams.toString();
-  history.replaceState(null, '', cleanUrl.pathname + (qs ? '?' + qs : '') + cleanUrl.hash);
+  if (returningFromHotels) {
+    // Strip ?from=hotels so a page refresh restarts the envelope animation
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete('from');
+    const qs = cleanUrl.searchParams.toString();
+    history.replaceState(null, '', cleanUrl.pathname + (qs ? '?' + qs : '') + cleanUrl.hash);
+  }
 }
 </script>
 </body>
