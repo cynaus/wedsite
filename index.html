@@ -785,70 +785,133 @@
     }
     .map-frame {
       width: 100%;
-      height: clamp(300px, 55vw, 440px);
+      aspect-ratio: 4 / 3;
       border: 1px solid rgba(192,39,42,0.15);
       display: block;
     }
-    .map-frame-wrap { display: none; }
+    .map-frame-wrap {
+      display: none;
+      position: relative;
+      width: min(100%, 600px);
+      aspect-ratio: 4 / 3;
+      margin: 0 auto;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(250, 246, 240, 0.44), rgba(250, 246, 240, 0.44)),
+        url('img/map-sketch.webp') center/cover no-repeat;
+      border: 1px solid rgba(192,39,42,0.15);
+    }
     .map-frame-wrap.active {
-      display: flex;
-      justify-content: center; /* Centers horizontally */
+      display: block;
     }
     .map-frame-wrap iframe {
-      width: min(100%, 600px);
-      max-width: 100%;
-      height: clamp(300px, 55vw, 440px);
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       display: block;
+      opacity: 0;
     }
     .map-frame-wrap iframe[hidden] { display: none; }
+    .map-frame-wrap.map-ready iframe {
+      animation: mapReveal 0.65s ease forwards;
+    }
+    @keyframes mapReveal {
+      to { opacity: 1; }
+    }
     .map-placeholder {
-      width: min(100%, 600px);
-      height: clamp(300px, 55vw, 440px);
-      padding: 2rem;
-      border: 1px solid rgba(192,39,42,0.15);
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
       background:
-        radial-gradient(circle at center, rgba(201,168,76,0.12), transparent 65%),
-        var(--ivory-dark);
+        radial-gradient(circle at center, rgba(250,246,240,0.54), rgba(250,246,240,0.24) 56%, rgba(250,246,240,0.04));
+      transition: opacity 0.45s ease, visibility 0.45s ease;
+    }
+    .map-placeholder.is-loading .map-load-button {
+      cursor: wait;
+      opacity: 0.72;
+    }
+    .map-placeholder.is-leaving {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .map-card-copy {
+      width: min(84%, 340px);
+      padding: 1.2rem 1.3rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
+      gap: 0.85rem;
       text-align: center;
+      transform: translateY(14px);
     }
-    .map-placeholder[aria-busy="true"] .map-load-button {
-      cursor: wait;
-      opacity: 0.72;
+    .map-marker-icon {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      background: var(--red-dark);
+      border: 2px solid rgba(255, 248, 233, 0.92);
+      border-radius: 50% 50% 50% 0;
+      box-shadow: 0 7px 14px rgba(92, 0, 4, 0.22);
+      transform: rotate(-45deg);
     }
-    .map-placeholder p {
-      max-width: 28rem;
-      color: var(--text-mid);
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.1rem;
-      font-style: italic;
-      line-height: 1.6;
+    .map-marker-icon::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      top: 50%;
+      left: 50%;
+      background: var(--ivory);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .map-card-title {
+      color: var(--red-dark);
+      font-family: 'Playfair Display SC', serif;
+      font-size: clamp(1rem, 2.2vw, 1.2rem);
+      letter-spacing: 0.12em;
+      text-shadow: 0 2px 10px rgba(255, 251, 244, 0.95), 0 1px 2px rgba(55, 31, 18, 0.18);
+      text-transform: uppercase;
     }
     .map-load-button {
-      border: 0;
+      border: 1px solid var(--red-dark);
       background: var(--red-dark);
       color: var(--ivory);
       cursor: pointer;
       font-family: 'Playfair Display SC', serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.18em;
-      padding: 0.85rem 1.4rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      padding: 0.78rem 1.3rem;
       text-transform: uppercase;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
     }
-    .map-load-button:hover { background: var(--red-deep); }
-    .map-external-link {
-      color: var(--red-dark);
-      font-family: 'Playfair Display SC', serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.12em;
-      text-decoration: none;
-      text-transform: uppercase;
+    .map-load-button:hover {
+      background: var(--red-deep);
+      border-color: var(--red-deep);
+      transform: translateY(-1px);
     }
-    .map-external-link:hover { text-decoration: underline; }
+    .map-load-button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 4px;
+    }
+    @media (max-width: 520px) {
+      .map-placeholder { padding: 1rem; }
+      .map-card-copy { width: min(88%, 300px); padding: 1rem; }
+      .map-marker-icon { width: 34px; height: 34px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .map-card-copy,
+      .map-frame-wrap.map-ready iframe {
+        transition: none;
+      }
+    }
 
     /* parking links */
     .parking-list {
@@ -1480,18 +1543,22 @@
 
     <div id="map-wedding" class="map-frame-wrap active" title="Google Map of Trinity Episcopal Church">
       <div class="map-placeholder" data-map-index="0">
-        <p>Explore the ceremony location and plan your route.</p>
-        <button type="button" class="map-load-button" onclick="loadInteractiveMaps()">Load Interactive Map</button>
-        <a class="map-external-link" href="https://www.google.com/maps/search/?api=1&query=Trinity+Episcopal+Church,1500+State+St,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+        <div class="map-card-copy">
+          <div class="map-marker-icon" aria-hidden="true"></div>
+          <div class="map-card-title">Interactive Map</div>
+          <button type="button" class="map-load-button" onclick="loadInteractiveMaps()">Load map</button>
+        </div>
       </div>
       <iframe title="Google Map of Trinity Episcopal Church" data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3106.3457917521864!2d-119.70654053176312!3d34.425271484346574!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80e914889b2cf9dd%3A0xf6d0e25843e2e6e3!2sTrinity%20Episcopal%20Church!5e0!3m2!1sen!2sus!4v1772444078360!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
     </div>
 
     <div id="map-reception" class="map-frame-wrap" title="Google Map of El Paseo Restaurant">
       <div class="map-placeholder" data-map-index="1">
-        <p>Explore the reception location and plan your route.</p>
-        <button type="button" class="map-load-button" onclick="loadInteractiveMaps()">Load Interactive Map</button>
-        <a class="map-external-link" href="https://www.google.com/maps/search/?api=1&query=El+Paseo+Restaurant,813+Anacapa+St,Santa+Barbara,CA" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+        <div class="map-card-copy">
+          <div class="map-marker-icon" aria-hidden="true"></div>
+          <div class="map-card-title">Interactive Map</div>
+          <button type="button" class="map-load-button" onclick="loadInteractiveMaps()">Load map</button>
+        </div>
       </div>
       <iframe title="Google Map of El Paseo Restaurant" data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4654.400933571741!2d-119.70137990620107!3d34.422736718076784!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80e914792568f3cb%3A0xf7fc42c2808e0523!2sEl%20Paseo%20Restaurant!5e0!3m2!1sen!2sus!4v1772444115865!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
     </div>
@@ -1991,10 +2058,9 @@ const I18N_INDEX = {
     venuesSub: 'Find your way to us',
     venueNames: ['Ceremony ~ Trinity Episcopal Church', 'Reception ~ El Paseo Restaurant'],
     mapTabs: ['Ceremony', 'Reception'],
-    mapPrompts: ['Explore the ceremony location and plan your route.', 'Explore the reception location and plan your route.'],
-    mapLoad: 'Load Interactive Map',
-    mapLoading: 'Opening the map…',
-    mapExternal: 'Open in Google Maps',
+    mapTitle: 'Interactive Map',
+    mapLoad: 'Load map',
+    mapLoading: 'Loading map…',
     parkingSub: 'Nearby Parking',
     parkingNames: ['Parking Lot #6 (Granada Garage)', 'Parking Lot #5', 'Parking Lot #7 (Library Garage)'],
     parkingLink: 'Directions →',
@@ -2105,10 +2171,9 @@ const I18N_INDEX = {
     venuesSub: 'Cómo llegar',
     venueNames: ['Ceremonia ~ Iglesia Episcopal Trinity', 'Recepción ~ Restaurante El Paseo'],
     mapTabs: ['Ceremonia', 'Recepción'],
-    mapPrompts: ['Explora el lugar de la ceremonia y planea tu ruta.', 'Explora el lugar de la recepción y planea tu ruta.'],
-    mapLoad: 'Cargar mapa interactivo',
-    mapLoading: 'Abriendo el mapa…',
-    mapExternal: 'Abrir en Google Maps',
+    mapTitle: 'Mapa interactivo',
+    mapLoad: 'Cargar mapa',
+    mapLoading: 'Cargando mapa…',
     parkingSub: 'Estacionamiento cercano',
     parkingNames: ['Estacionamiento #6 (Garaje Granada)', 'Estacionamiento #5', 'Estacionamiento #7 (Garaje Library)'],
     parkingLink: 'Cómo llegar →',
@@ -2241,13 +2306,10 @@ function applyIndexTranslations(lang) {
   const mapTabs = document.querySelectorAll('#sec-venue .map-tab');
   mapTabs.forEach((el, i) => { if (copy.mapTabs[i]) el.textContent = copy.mapTabs[i]; });
   document.querySelectorAll('#sec-venue .map-placeholder').forEach((placeholder) => {
-    const i = Number(placeholder.dataset.mapIndex);
-    const prompt = placeholder.querySelector('p');
+    const title = placeholder.querySelector('.map-card-title');
     const button = placeholder.querySelector('.map-load-button');
-    const externalLink = placeholder.querySelector('.map-external-link');
-    if (prompt && copy.mapPrompts?.[i]) prompt.textContent = copy.mapPrompts[i];
+    if (title) title.textContent = copy.mapTitle;
     if (button && !button.disabled) button.textContent = copy.mapLoad;
-    if (externalLink) externalLink.textContent = copy.mapExternal;
   });
   const parkingSub = document.querySelector('#sec-venue .parking-list .section-sub');
   if (parkingSub) parkingSub.textContent = copy.parkingSub;
@@ -3188,9 +3250,11 @@ function switchMapTab(tab, btn) {
 function loadInteractiveMaps() {
   const copy = I18N_INDEX[currentLanguage] || I18N_INDEX.en;
   const frames = document.querySelectorAll('.map-frame-wrap iframe[data-src]');
+  const placeholders = document.querySelectorAll('.map-placeholder');
 
-  document.querySelectorAll('.map-placeholder').forEach((placeholder) => {
+  placeholders.forEach((placeholder) => {
     placeholder.setAttribute('aria-busy', 'true');
+    placeholder.classList.add('is-loading');
     const button = placeholder.querySelector('.map-load-button');
     if (!button) return;
     button.disabled = true;
@@ -3203,7 +3267,9 @@ function loadInteractiveMaps() {
     const placeholder = iframe.closest('.map-frame-wrap')?.querySelector('.map-placeholder');
     iframe.addEventListener('load', () => {
       iframe.hidden = false;
-      placeholder?.remove();
+      iframe.closest('.map-frame-wrap')?.classList.add('map-ready');
+      placeholder?.classList.add('is-leaving');
+      setTimeout(() => placeholder?.remove(), 500);
     }, { once: true });
     iframe.src = iframe.dataset.src;
   });
