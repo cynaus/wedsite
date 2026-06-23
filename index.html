@@ -232,17 +232,29 @@
       top: -17.5%;
       background-repeat: no-repeat;
       transform: translateZ(0);
+      /* Stops WebKit re-rasterizing the layer mid-transform (the classic
+         iOS/old-Android parallax flicker). No visual change. */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
-    /* Promote animated layers to their own compositor tile. Sky needs its own
-       tile because it carries a filter; without will-change the browser repaints
-       the filter in software every frame instead of compositing on the GPU.
-       Arches are included because they are transformed every frame too — bare
-       translateZ(0) is treated as a hint, not a guarantee, on mobile WebKit. */
-    .hero-layer.sky,
+    /* Promote the layers that move every frame to their own compositor tile.
+       Sky is intentionally NOT here: it no longer scroll-parallaxes (scrollMult
+       0) and its old filter was removed, so it only animates once at entrance —
+       JS demotes it to a 2D transform at rest (frozenAlways) so the largest
+       layer never holds a resident tile. Arches are included because they are
+       transformed every frame; bare translateZ(0) is treated as a hint, not a
+       guarantee, on mobile WebKit. */
     .hero-layer.bushes,
     .hero-layer.church,
     .hero-layer.arch-left,
     .hero-layer.arch-right { will-change: transform; }
+    /* Low-power devices: these layers are frozen (no scroll motion) in degraded
+       mode, so don't keep them permanently promoted — holding oversized scaled
+       tiles resident is what makes weak GPUs drop/mis-place them (the church
+       rendering off-centre). Bushes still parallaxes, so it keeps its hint. */
+    html.hero-degraded .hero-layer.church,
+    html.hero-degraded .hero-layer.arch-left,
+    html.hero-degraded .hero-layer.arch-right { will-change: auto; }
     .hero-layer.sky {
       background-position: center top;
       background-size: cover;
@@ -690,6 +702,12 @@
     }
 
     @media (max-width: 768px) {
+      /* Smaller overscan on the two largest full-bleed layers so their scaled
+         backing-store textures stay under older GPUs' max-texture-size. Both
+         stay centred (left/top = -(width-100)/2); the reduced margin still
+         covers their entrance/scroll travel without exposing edges. */
+      .hero-layer.sky,
+      .hero-layer.church { width: 124%; height: 124%; left: -12%; top: -12%; }
       .hero-layer.church { background-size: 90vw auto; background-position: center 50%; }
       .hero-layer.arch-left,
       .hero-layer.arch-right {
@@ -1786,7 +1804,7 @@
       <div class="sep-line" style="background: linear-gradient(to right, transparent, rgba(250,246,240,0.3), transparent)"></div>
     </div>
     <h2 class="section-title fancy" id="rsvp-title">RSVP</h2>
-    <p class="rsvp-deadline fancy" style="color: #f0c060;">Kindly respond by September 1st, 2026</p>
+    <p class="rsvp-deadline fancy" style="color: #f0c060;">Kindly respond by December 1st, 2026</p>
 
     <form class="rsvp-form" id="rsvpForm" onsubmit="submitRSVP(event); return false;">
 
@@ -2096,7 +2114,7 @@ const I18N_INDEX = {
     giftsSub: 'Your presence is our greatest gift',
     giftsText: "Your love and company on our special day is truly the greatest gift of all. However, if you'd like to contribute to our honeymoon it would be deeply appreciated.\n\nWe are looking forward to celebrating the start of married life together with a trip to Japan, where we'll enjoy beautiful scenery, romantic outings, and creating lifelong memories.\n\nWe're incredibly excited to begin this next chapter together and grateful for everyone helping us get there.",
     rsvpTitle: 'RSVP',
-    rsvpDeadline: 'Kindly respond by September 1st, 2026',
+    rsvpDeadline: 'Kindly respond by December 1st, 2026',
     rsvpGuestLabel: 'Number of Guests',
     rsvpGuestNote: 'All guests must be on the official guest list to be seated.',
     rsvpNamesLabel: 'Full Name(s)',
@@ -2209,7 +2227,7 @@ const I18N_INDEX = {
     giftsSub: 'Tu presencia es nuestro mejor regalo',
     giftsText: 'Tu amor y compañía en nuestro día especial es, de verdad, el regalo más grande. Sin embargo, si te gustaría contribuir a nuestra luna de miel, lo agradeceríamos profundamente.\n\nEsperamos con ilusión celebrar el comienzo de nuestra vida de casados con un viaje a Japón, donde disfrutaremos de hermosos paisajes, paseos románticos y crearemos recuerdos para toda la vida.\n\nEstamos muy emocionados de comenzar juntos este próximo capítulo, y agradecidos con todos los que nos ayudan a llegar ahí.',
     rsvpTitle: 'Confirmación',
-    rsvpDeadline: 'Por favor responde antes del 1 de septiembre de 2026',
+    rsvpDeadline: 'Por favor responde antes del 1 de diciembre de 2026',
     rsvpGuestLabel: 'Número de invitados',
     rsvpGuestNote: 'Todos los invitados deben estar en la lista oficial para poder sentarse.',
     rsvpNamesLabel: 'Nombre(s) completo(s)',
@@ -2599,11 +2617,22 @@ buildLetterSpans('name-austin', 'Austin');
 // HERO PARALLAX
 // ─────────────────────────────────────
 (function () {
+  // frozenAlways: never scroll-parallaxes in any path (scrollMult 0 already,
+  //   but this also drives the demote-to-2D-at-rest below).
+  // freezeWhenDegraded: drop scroll-driven motion on low-power devices (the
+  //   church/arches that flicker or mis-allocate their tiles there).
+  // recoverable: eligible for the idle repaint that recovers a dropped/mis-
+  //   placed compositor tile after scroll stops.
+  // mobileEntranceScale: smaller resting scale on ≤768px so the backing-store
+  //   texture stays under older GPUs' max-texture-size.
   const LAYERS = [
-    { el: null, id: 'pl-sky', scrollMult: -0.12, entranceY: -18, entranceScale: 1.18 },
-    { el: null, id: 'pl-church', scrollMult: -0.24, entranceY: -44, entranceScale: 1.34 },
-    { el: null, id: 'pl-arch-left', scrollMult: -0.34, closedXSign: 1, entranceY: -16, startScale: 0.86, entranceScale: 1.06, isArch: true },
-    { el: null, id: 'pl-arch-right', scrollMult: -0.34, closedXSign: -1, entranceY: -16, startScale: 0.86, entranceScale: 1.06, isArch: true },
+    // Clouds (backmost): no parallax in any path — they scroll with the page
+    // (scrollMult 0). frozenAlways demotes them to a 2D resting transform so the
+    // largest layer never holds a permanent compositor tile.
+    { el: null, id: 'pl-sky', scrollMult: 0, entranceY: -18, entranceScale: 1.18, mobileEntranceScale: 1.12, frozenAlways: true, recoverable: true },
+    { el: null, id: 'pl-church', scrollMult: -0.24, mobileScrollMult: -0.16, entranceY: -44, entranceScale: 1.34, mobileEntranceScale: 1.2, freezeWhenDegraded: true, recoverable: true },
+    { el: null, id: 'pl-arch-left', scrollMult: -0.34, closedXSign: 1, entranceY: -16, startScale: 0.86, entranceScale: 1.06, isArch: true, freezeWhenDegraded: true, recoverable: true },
+    { el: null, id: 'pl-arch-right', scrollMult: -0.34, closedXSign: -1, entranceY: -16, startScale: 0.86, entranceScale: 1.06, isArch: true, freezeWhenDegraded: true, recoverable: true },
     { el: null, id: 'pl-bushes', scrollMult: -0.75, mobileScrollMult: -0.5, entranceScale: 2.05 },
   ];
   const HERO_CONTENT = {
@@ -2648,6 +2677,79 @@ buildLetterSpans('name-austin', 'Austin');
   let catchUpStart = null;
   let catchUpFrom = 0;
   let catchUpPending = false;
+
+  // Low-power degraded mode: freezes the heavy background layers and drops
+  // their permanent compositor promotion (via the html.hero-degraded class),
+  // so weak GPUs never have to hold/raster oversized scaled tiles.
+  let degraded = false;
+  // Touch device (mobile-class GPU). Gates the idle tile-recovery, which targets
+  // a mobile-only failure — desktop never drops these tiles, so we keep its
+  // forced-reflow/will-change cycles off PCs entirely.
+  let coarsePointer = false;
+
+  // Idle tile-recovery. Old mobile GPUs occasionally drop or mis-place a
+  // composited tile; because tick() stops painting the instant scroll settles,
+  // there is no follow-up frame to repair it (this is what leaves the church
+  // stuck off-screen/off-centre). A short while after scroll stops we force the
+  // recoverable layers to re-rasterise. Bounded so we don't burn battery.
+  const RECOVERY_DELAY = 300;
+  const RECOVERY_FRAMES = 2;
+  const MAX_RECOVERY_ROUNDS = 2;
+  let recoveryFramesLeft = 0;
+  let recoveryRounds = 0;
+  let recoveryTimer = null;
+
+  function detectDegraded() {
+    // Coarse pointer gates everything: this is a touch/mobile-GPU fix, so a
+    // desktop is never degraded — not even with reduced-motion enabled or a low
+    // core count. On touch devices we then degrade for reduced-motion or weak
+    // hardware. deviceMemory is absent on iOS Safari, so hardwareConcurrency is
+    // the usable age proxy there (≤4 cores ≈ older iPhone/Android).
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cores = navigator.hardwareConcurrency || 8;
+    const mem = navigator.deviceMemory || 8;
+    return coarsePointer && (reduceMotion || cores <= 4 || mem <= 4);
+  }
+
+  function forceTileRecovery() {
+    // Cycle will-change auto→transform→(CSS) with forced reflows between. Going
+    // through both values guarantees at least one genuine style change whatever
+    // the layer's resting value is (sky rests at auto, church/arches at
+    // transform), forcing a repaint of current/correct content over any dropped
+    // or mis-placed tile. Restoring to '' hands back to CSS, so a demoted layer
+    // is never left re-promoted.
+    LAYERS.forEach((layer) => {
+      if (!layer.el || !layer.recoverable) return;
+      const s = layer.el.style;
+      s.willChange = 'auto';
+      void layer.el.offsetHeight;
+      s.willChange = 'transform';
+      void layer.el.offsetHeight;
+      s.willChange = '';
+      void layer.el.offsetHeight;
+    });
+  }
+
+  function scheduleIdleRecovery() {
+    // Touch devices only — the dropped/mis-placed-tile failure is mobile-GPU
+    // specific, so desktop never pays the forced-reflow/will-change cycles.
+    // (Includes degraded devices, which are a subset of coarse-pointer.)
+    if (!coarsePointer) return;
+    if (recoveryRounds >= MAX_RECOVERY_ROUNDS || recoveryTimer) return;
+    recoveryTimer = setTimeout(() => {
+      recoveryTimer = null;
+      recoveryRounds++;
+      forceTileRecovery();
+      recoveryFramesLeft = RECOVERY_FRAMES;
+      scheduleRaf();
+    }, RECOVERY_DELAY);
+  }
+
+  function cancelIdleRecovery() {
+    recoveryRounds = 0;
+    recoveryFramesLeft = 0;
+    if (recoveryTimer) { clearTimeout(recoveryTimer); recoveryTimer = null; }
+  }
 
   // Round translation values to the nearest device pixel so the compositor
   // doesn't have to re-snap (and re-antialias) layers on every frame.
@@ -2747,11 +2849,21 @@ buildLetterSpans('name-austin', 'Austin');
     window.__heroScrollY = scrollY;
     scrollDirty = false;
 
+    // Real scroll cancels any pending/in-progress recovery — the live frames
+    // are already repainting, and we want a fresh recovery budget after this.
+    if (scrollChanged) cancelIdleRecovery();
+
     // Skip paint if entrance is done and scroll hasn't moved (and we're not
     // mid-catch-up — that needs to keep advancing even when scroll is idle).
+    // Recovery frames are an exception: they repaint while scroll is idle.
     if (entranceDone && !scrollChanged && !inCatchUp) {
-      raf = null;
-      return;
+      if (recoveryFramesLeft > 0) {
+        recoveryFramesLeft--;
+      } else {
+        raf = null;
+        scheduleIdleRecovery();
+        return;
+      }
     }
 
     LAYERS.forEach((layer) => {
@@ -2763,17 +2875,30 @@ buildLetterSpans('name-austin', 'Austin');
         const startScale = layer.startScale || 1;
         const endScale = layer.entranceScale || 1;
         const baseS = startScale + ((endScale - startScale) * te);
-        const scrollDriftY = px(scrollY * layer.scrollMult);
-        layer.el.style.transform =
-          `translate3d(${closedX}px, ${baseY + scrollDriftY}px, 0) scale(${baseS})`;
+        const frozen = layer.frozenAlways || (degraded && layer.freezeWhenDegraded);
+        const scrollDriftY = px(scrollY * (frozen ? 0 : layer.scrollMult));
+        // Once a frozen layer's entrance settles, drop to a 2D transform (no
+        // translateZ) so it isn't force-promoted: lets will-change:auto demote
+        // it and stops weak GPUs holding an oversized scaled tile. 3D during
+        // entrance keeps that one-time animation GPU-smooth.
+        layer.el.style.transform = (frozen && entranceDone)
+          ? `translate(${closedX}px, ${baseY + scrollDriftY}px) scale(${baseS})`
+          : `translate3d(${closedX}px, ${baseY + scrollDriftY}px, 0) scale(${baseS})`;
       } else {
         const entranceY = layer.id === 'pl-bushes' ? getBushEntranceY() : (layer.entranceY || 0);
         const baseY = px(entranceY * te);
-        const baseS = 1 + ((layer.entranceScale || 1) - 1) * te;
-        const mult = (isMobileCached && layer.mobileScrollMult !== undefined) ? layer.mobileScrollMult : layer.scrollMult;
+        const targetScale = (isMobileCached && layer.mobileEntranceScale !== undefined)
+          ? layer.mobileEntranceScale : (layer.entranceScale || 1);
+        const baseS = 1 + (targetScale - 1) * te;
+        const frozen = layer.frozenAlways || (degraded && layer.freezeWhenDegraded);
+        let mult = (isMobileCached && layer.mobileScrollMult !== undefined) ? layer.mobileScrollMult : layer.scrollMult;
+        if (frozen) mult = 0;
         const scrollYOffset = px(scrollY * mult);
-        layer.el.style.transform =
-          `translate3d(0, ${baseY + scrollYOffset}px, 0) scale(${baseS})`;
+        // See arch branch: drop to a 2D transform once entrance settles so frozen
+        // layers (incl. clouds on every device) demote and free their tile.
+        layer.el.style.transform = (frozen && entranceDone)
+          ? `translate(0, ${baseY + scrollYOffset}px) scale(${baseS})`
+          : `translate3d(0, ${baseY + scrollYOffset}px, 0) scale(${baseS})`;
       }
     });
 
@@ -2786,7 +2911,7 @@ buildLetterSpans('name-austin', 'Austin');
     // translateY never lags or leads the layers it sits in front of.
     if (typeof window.updateBloomScroll === 'function') window.updateBloomScroll();
 
-    raf = (entranceDone && !inCatchUp) ? null : requestAnimationFrame(tick);
+    raf = (entranceDone && !inCatchUp && recoveryFramesLeft <= 0) ? null : requestAnimationFrame(tick);
   }
 
   function scheduleRaf() {
@@ -2818,6 +2943,12 @@ buildLetterSpans('name-austin', 'Austin');
     initialized = true;
 
     updateViewportCache();
+
+    // Decide the low-power path once and tag the document so CSS can drop the
+    // permanent compositor promotion on the heavy layers (see html.hero-degraded).
+    coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    degraded = detectDegraded();
+    document.documentElement.classList.toggle('hero-degraded', degraded);
 
     bindLayerElements();
 
@@ -2945,6 +3076,13 @@ function openEnvelope() {
 // GOLDEN MOTES
 // ─────────────────────────────────────
 function startGoldenMotes() {
+  // Guard against a second init (mirrors initHeroParallax). The envelopeOpened
+  // flag already makes the two call paths mutually exclusive, but without this
+  // a stray double-call would stack a second RAF loop, resize listener and
+  // IntersectionObserver, none of which are ever torn down.
+  if (startGoldenMotes._started) return;
+  startGoldenMotes._started = true;
+
   const canvas = document.getElementById('petalCanvas');
   const ctx = canvas.getContext('2d');
   const goldPalettes = [
@@ -2956,13 +3094,31 @@ function startGoldenMotes() {
   let isRunning = false;
 
   function resize() {
-    W = canvas.offsetWidth;
-    H = canvas.offsetHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const newW = canvas.offsetWidth;
+    const newH = canvas.offsetHeight;
+    const newDpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    // Bail if nothing actually changed. iOS Safari fires a window `resize` on
+    // every address-bar show/hide during scroll; without this guard each one
+    // would rebuild the mote field and make the motes teleport.
+    if (newW === W && newH === H && newDpr === dpr) return;
+
+    const prevW = W, prevH = H;
+    W = newW;
+    H = newH;
+    dpr = newDpr;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    motes = createMotes();
+
+    if (motes.length && prevW && prevH) {
+      // Genuine size change (e.g. rotation): rescale existing motes so they
+      // keep their relative positions instead of jumping to fresh randoms.
+      const sx = W / prevW, sy = H / prevH;
+      motes.forEach((mote) => { mote.x *= sx; mote.y *= sy; });
+    } else {
+      motes = createMotes();
+    }
   }
   window.addEventListener('resize', resize);
 
