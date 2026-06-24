@@ -1972,6 +1972,12 @@ const heroWarmupTimer = setTimeout(() => {
 if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
+
+function clearSectionHash() {
+  if (!window.location.hash.startsWith('#sec-')) return;
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+}
+
 window.addEventListener('load', () => {
   if (returningFromHotels) {
     document.getElementById('sec-accomm')?.scrollIntoView({ behavior: 'instant' });
@@ -1979,10 +1985,14 @@ window.addEventListener('load', () => {
     window.scrollTo(0, resumedInvitationScrollY);
   } else if (!resumingOpenedInvitation) {
     window.scrollTo(0, 0);
+    clearSectionHash();
   }
 });
 window.addEventListener('pageshow', () => {
-  if (!returningFromHotels && !resumingOpenedInvitation) window.scrollTo(0, 0);
+  if (!returningFromHotels && !resumingOpenedInvitation) {
+    window.scrollTo(0, 0);
+    clearSectionHash();
+  }
 });
 
 function storeInvitationLifecycle(state) {
@@ -2562,6 +2572,12 @@ window.addEventListener('pageshow', (event) => {
   const setOpen = (open) => {
     menu.dataset.open = open ? 'true' : 'false';
     trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      requestAnimationFrame(() => {
+        void panel.offsetHeight;
+        panel.querySelectorAll('a').forEach((link) => { void link.offsetHeight; });
+      });
+    }
   };
 
   trigger.addEventListener('click', (e) => {

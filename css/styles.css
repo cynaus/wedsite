@@ -291,18 +291,14 @@ footer {
   border: 1px solid rgba(250,246,240,0.25);
   padding: 0.35rem 0;
   opacity: 0;
-  transform: translate3d(0, -6px, 0);
+  transform: translateY(-6px);
   transform-origin: top right;
   pointer-events: none;
-  /* Hold the GPU layer while invisible so iOS WebKit can't evict the tile
-     during URL-bar transitions and leave the panel opening onto an empty
-     raster (missing text + late "resize" repaint). */
-  will-change: opacity, transform;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .jump-menu[data-open="true"] .jump-menu-panel {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
+  transform: translateY(0);
   pointer-events: auto;
 }
 .jump-menu-panel a {
