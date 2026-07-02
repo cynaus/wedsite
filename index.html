@@ -2826,6 +2826,11 @@ buildLetterSpans('name-austin', 'Austin');
   // tracking into fluid motion and absorbs small input jumps (URL bar,
   // rubber-band) instead of painting them verbatim.
   const SCROLL_LERP = 0.14;
+  // NOTE (item 5 post-mortem): pointer/ambient motion on these layers was
+  // tried and retired — composited layers pixel-snap their translations, so
+  // sub-pixel-per-frame motion renders as visible 1px staircase steps. The
+  // pointer-reactive motion lives on the mote canvas instead (fractional
+  // canvas coordinates don't snap).
   let entranceStart = null;
   let entranceDone = false;
   let raf = null;
@@ -3323,17 +3328,40 @@ function openEnvelope() {
 // ─────────────────────────────────────
 // GOLDEN MOTES
 // ─────────────────────────────────────
+// Pointer target shared by any mote field with pointerParallax on. The dust
+// (not the scene layers) carries the mouse response: composited layers pixel-
+// snap their translations, so slow sub-pixel motion steps visibly — canvas
+// motes are drawn at fractional coordinates every frame and stay smooth.
+const MOTE_POINTER_X = 52;    // px at screen edge for a depth of -1
+const MOTE_POINTER_Y = 26;
+const MOTE_POINTER_LERP = 0.06;
+let motePointerTgtX = 0, motePointerTgtY = 0;
+let motePointerBound = false;
+
+function bindMotePointer() {
+  if (motePointerBound) return;
+  motePointerBound = true;
+  window.addEventListener('mousemove', (e) => {
+    motePointerTgtX = (e.clientX / (window.innerWidth || 1)) * 2 - 1;
+    motePointerTgtY = (e.clientY / (window.innerHeight || 1)) * 2 - 1;
+  }, { passive: true });
+}
+
 // Shared golden-dust engine. Each field owns a canvas, mote set and RAF loop;
 // opts tune density/brightness per surface. depthParallax gives every mote a
 // per-depth scroll offset driven from window.__heroScrollY, so the dust sits
 // at its own distance between the parallax layers and moves in lockstep with
-// them (foreground motes drift faster than the far church).
+// them (foreground motes drift faster than the far church). pointerParallax
+// adds a mouse-driven offset through the same depths.
 function createMoteField(canvas, opts = {}) {
   const ctx = canvas.getContext('2d');
   const areaPerMote = opts.areaPerMote || 30000;
   const minCount = opts.minCount !== undefined ? opts.minCount : 36;
   const dim = opts.dim || 1;
   const depthParallax = !!opts.depthParallax;
+  const pointerParallax = !!opts.pointerParallax;
+  let pointerCurX = 0, pointerCurY = 0;
+  if (pointerParallax) bindMotePointer();
   const goldPalettes = [
     [255, 248, 196, 255, 196, 66, 218, 133, 20],
     [255, 252, 218, 255, 213, 92, 232, 155, 35],
@@ -3403,14 +3431,15 @@ function createMoteField(canvas, opts = {}) {
 
   resize();
 
-  function drawMote(mote, ts, offY) {
+  function drawMote(mote, ts, offX, offY) {
+    const x = mote.x + offX;
     const y = mote.y + offY;
     const wave = (Math.sin((ts * mote.twinkleSpeed) + mote.twinkleOffset) + 1) * 0.5;
     const pulse = Math.pow(wave, 2.4);
     const alpha = Math.min(1, (0.46 + pulse * 0.54) * mote.intensity) * dim;
     const glowRadius = mote.r * mote.glow * (0.86 + pulse * 0.28);
     const [coreR, coreG, coreB, midR, midG, midB, edgeR, edgeG, edgeB] = mote.palette;
-    const gradient = ctx.createRadialGradient(mote.x, y, 0, mote.x, y, glowRadius);
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
     gradient.addColorStop(0, `rgba(${coreR}, ${coreG}, ${coreB}, ${alpha})`);
     gradient.addColorStop(0.12, `rgba(${midR}, ${midG}, ${midB}, ${alpha * 0.96})`);
     gradient.addColorStop(0.38, `rgba(${midR}, ${midG}, ${midB}, ${alpha * 0.62})`);
@@ -3421,19 +3450,19 @@ function createMoteField(canvas, opts = {}) {
     ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(mote.x, y, glowRadius, 0, Math.PI * 2);
+    ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = `rgba(255, 252, 222, ${Math.min(1, alpha * 1.12)})`;
     ctx.beginPath();
-    ctx.arc(mote.x, y, Math.max(0.55, mote.r * (0.72 + pulse * 0.2)), 0, Math.PI * 2);
+    ctx.arc(x, y, Math.max(0.55, mote.r * (0.72 + pulse * 0.2)), 0, Math.PI * 2);
     ctx.fill();
 
     if (mote.glint && pulse > 0.48) {
       const glintAlpha = (pulse - 0.48) * 1.35 * dim;
       const glintLength = glowRadius * (0.7 + pulse * 0.45);
       const glintGradient = ctx.createLinearGradient(
-        mote.x - glintLength, y, mote.x + glintLength, y
+        x - glintLength, y, x + glintLength, y
       );
       glintGradient.addColorStop(0, 'rgba(255, 190, 55, 0)');
       glintGradient.addColorStop(0.5, `rgba(255, 235, 145, ${glintAlpha})`);
@@ -3441,10 +3470,10 @@ function createMoteField(canvas, opts = {}) {
       ctx.strokeStyle = glintGradient;
       ctx.lineWidth = 0.55;
       ctx.beginPath();
-      ctx.moveTo(mote.x - glintLength, y);
-      ctx.lineTo(mote.x + glintLength, y);
-      ctx.moveTo(mote.x, y - glintLength * 0.72);
-      ctx.lineTo(mote.x, y + glintLength * 0.72);
+      ctx.moveTo(x - glintLength, y);
+      ctx.lineTo(x + glintLength, y);
+      ctx.moveTo(x, y - glintLength * 0.72);
+      ctx.lineTo(x, y + glintLength * 0.72);
       ctx.stroke();
     }
     ctx.restore();
@@ -3467,9 +3496,18 @@ function createMoteField(canvas, opts = {}) {
     // Same smoothed scrollY the parallax layers painted this frame.
     const scrollBase = depthParallax ? (window.__heroScrollY || 0) : 0;
 
+    if (pointerParallax) {
+      const pk = 1 - Math.pow(1 - MOTE_POINTER_LERP, dt / 16.7);
+      pointerCurX += (motePointerTgtX - pointerCurX) * pk;
+      pointerCurY += (motePointerTgtY - pointerCurY) * pk;
+    }
+
     motes.forEach((mote) => {
       stepMote(mote, dt);
-      drawMote(mote, ts, scrollBase * mote.depth);
+      const offX = pointerParallax ? pointerCurX * mote.depth * MOTE_POINTER_X : 0;
+      const offY = scrollBase * mote.depth
+        + (pointerParallax ? pointerCurY * mote.depth * MOTE_POINTER_Y : 0);
+      drawMote(mote, ts, offX, offY);
     });
 
     raf = requestAnimationFrame(animate);
@@ -3510,7 +3548,11 @@ function startGoldenMotes() {
 
   const heroEl = document.getElementById('hero');
   const field = startObservedMoteField(
-    document.getElementById('petalCanvas'), heroEl, { depthParallax: true }
+    document.getElementById('petalCanvas'), heroEl, {
+      depthParallax: true,
+      // Fine pointers only — touch devices have no hover position to track.
+      pointerParallax: !window.matchMedia('(pointer: coarse)').matches,
+    }
   );
   field.start();
 }
@@ -3523,7 +3565,14 @@ function startEnvelopeMotes() {
   if (envelopeOpened) return; // skip path never shows the envelope screen
   const canvas = document.getElementById('envMoteCanvas');
   if (!canvas) return;
-  envelopeMoteField = createMoteField(canvas, { areaPerMote: 52000, minCount: 20, dim: 0.55 });
+  envelopeMoteField = createMoteField(canvas, {
+    areaPerMote: 52000,
+    minCount: 20,
+    dim: 0.55,
+    // Same pointer response as the hero dust, so the candlelit screen is
+    // already alive in your hands before the seal breaks.
+    pointerParallax: !window.matchMedia('(pointer: coarse)').matches,
+  });
   envelopeMoteField.start();
 }
 
@@ -3598,6 +3647,21 @@ function startRoseBlooms() {
       });
     }
 
+    // Gap-seeking x: aim each new bloom at the centre of the widest empty
+    // horizontal stretch (with jitter), instead of uniform random x — pure
+    // random sampling leaves large bare runs on wide screens, where a dozen
+    // blooms scatter across 2500+px.
+    function pickGapX(xMin, xMax) {
+      const points = [xMin, ...blooms.map((b) => b.x).sort((a, b) => a - b), xMax];
+      let bestStart = xMin, bestEnd = xMax, bestSize = -1;
+      for (let i = 1; i < points.length; i++) {
+        const size = points[i] - points[i - 1];
+        if (size > bestSize) { bestSize = size; bestStart = points[i - 1]; bestEnd = points[i]; }
+      }
+      const x = (bestStart + bestEnd) / 2 + (Math.random() - 0.5) * bestSize * 0.4;
+      return Math.max(xMin, Math.min(xMax, x));
+    }
+
     for (let i = 0; i < maxAttempts; i++) {
       const scale = (0.55 + Math.random() * 0.35) * 0.5;
       const drawW = frameW * scale;
@@ -3611,7 +3675,7 @@ function startRoseBlooms() {
       if (xMin > xMax || yMin > yMax) continue;
 
       const candidate = {
-        x: xMin + Math.random() * (xMax - xMin),
+        x: pickGapX(xMin, xMax),
         y: yMin + Math.random() * (yMax - yMin),
         drawW, drawH, scale,
         startMs: 0,
@@ -3655,16 +3719,23 @@ function startRoseBlooms() {
   }
 
   let lastSpawn = 0;
-  let startTs = 0;
+  let spawnFailures = 0;
   let isRunning = false;
+
+  // Bloom population scales with canvas width (the old fixed 3s spawn window
+  // maxed out around 14 blooms — sparse enough to leave big bare stretches on
+  // wide monitors). Recomputed live so a resize can grow the garden.
+  const targetBloomCount = () => Math.max(10, Math.min(26, Math.round(W / 100)));
 
   function animate(ts) {
     ctx.clearRect(0, 0, W, H);
-    if (!startTs) startTs = ts;
 
-    if (ts - startTs <= 3000 && ts - lastSpawn > 350 && blooms.length < 32) {
+    // Keep planting until the width-scaled target is reached, or the band
+    // is effectively full (repeated placement failures).
+    if (spawnFailures < 20 && ts - lastSpawn > 300 && blooms.length < targetBloomCount()) {
       const b = makeBloom();
-      if (b) { blooms.push(b); lastSpawn = ts; }
+      if (b) { blooms.push(b); lastSpawn = ts; spawnFailures = 0; }
+      else if (sheet.complete && sheet.naturalWidth) { spawnFailures++; lastSpawn = ts; }
     }
 
     if (sheet.complete && sheet.naturalWidth) {
