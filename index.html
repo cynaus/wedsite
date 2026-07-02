@@ -2804,12 +2804,18 @@ buildLetterSpans('name-austin', 'Austin');
 
   const ENTRANCE_DURATION = 2600;
   const MAX_SCENE_SCROLL_Y = 180;
+  // Exponential smoothing factor per 16.7ms frame: each frame the painted
+  // scrollY closes ~14% of its distance to the real one. Turns mechanical 1:1
+  // tracking into fluid motion and absorbs small input jumps (URL bar,
+  // rubber-band) instead of painting them verbatim.
+  const SCROLL_LERP = 0.14;
   let entranceStart = null;
   let entranceDone = false;
   let raf = null;
   let paused = false;
   let initialized = false;
   let lastScrollY = -1;
+  let prevTickTs = 0;
   let scrollDirty = false;
   // Cached so tick() never reads window.innerWidth on the hot path.
   let cachedViewportWidth = 0;
@@ -2825,14 +2831,8 @@ buildLetterSpans('name-austin', 'Austin');
   let urlBarTimer = null;
   let lastVisualHeight = 0;
 
-  // When the freeze ends, the real scrollY may have moved tens or hundreds of
-  // pixels while parallax was held in place. Easing from the frozen position
-  // to the live value over a few frames avoids the visible one-frame snap
-  // (most obvious on the sky and arch layers when scrolling back up).
-  const CATCH_UP_DURATION = 160;
-  let catchUpStart = null;
-  let catchUpFrom = 0;
-  let catchUpPending = false;
+  // (The old freeze-end "catch-up" tween is gone: the scroll lerp above eases
+  // from the frozen position to the live value on its own.)
 
   // Low-power degraded mode: freezes the heavy background layers and drops
   // their permanent compositor promotion (via the html.hero-degraded class),
@@ -2975,31 +2975,31 @@ buildLetterSpans('name-austin', 'Austin');
 
     if (t >= 1) entranceDone = true;
 
-    // Activate any pending catch-up here so it has a real RAF timestamp.
-    if (catchUpPending) {
-      catchUpStart = ts;
-      catchUpPending = false;
-    }
+    // Clamped so a resume after a long RAF gap (tab switch, idle stop) can't
+    // produce an oversized lerp step.
+    const dt = prevTickTs ? Math.min(48, ts - prevTickTs) : 16.7;
+    prevTickTs = ts;
 
     // Hold the parallax at its previous position while the URL bar is mid-
-    // animation — the scroll deltas it generates are not user-intended.
-    const rawScrollY = applyScrollCap(getScrollY());
+    // animation — the scroll deltas it generates are not user-intended. When
+    // the freeze lifts, the lerp eases back to the live value on its own.
+    const targetScrollY = applyScrollCap(getScrollY());
     let scrollY;
-    let inCatchUp = false;
     if (urlBarSettling && lastScrollY >= 0) {
       scrollY = lastScrollY;
-      // A new freeze cancels any in-flight catch-up; if needed, the next
-      // freeze-end will start a fresh one from the current frozen position.
-      catchUpStart = null;
-    } else if (catchUpStart !== null) {
-      const k = Math.min(1, (ts - catchUpStart) / CATCH_UP_DURATION);
-      scrollY = catchUpFrom + (rawScrollY - catchUpFrom) * easeOutCubic(k);
-      if (k >= 1) catchUpStart = null;
-      else inCatchUp = true;
+    } else if (lastScrollY < 0) {
+      scrollY = targetScrollY;
     } else {
-      scrollY = rawScrollY;
+      // Frame-rate-compensated exponential ease toward the real position.
+      const k = 1 - Math.pow(1 - SCROLL_LERP, dt / 16.7);
+      scrollY = lastScrollY + (targetScrollY - lastScrollY) * k;
+      // Snap once within a tenth of a pixel so the loop can go idle.
+      if (Math.abs(targetScrollY - scrollY) < 0.1) scrollY = targetScrollY;
     }
     const scrollChanged = scrollY !== lastScrollY;
+    // Still easing toward the target (never true during a freeze — the frozen
+    // position is intentional, and the scroll listener re-wakes the loop).
+    const settling = !urlBarSettling && scrollY !== targetScrollY;
     lastScrollY = scrollY;
     // Shared so the bloom canvas paints from the same scrollY in the same frame.
     window.__heroScrollY = scrollY;
@@ -3009,10 +3009,10 @@ buildLetterSpans('name-austin', 'Austin');
     // are already repainting, and we want a fresh recovery budget after this.
     if (scrollChanged) cancelIdleRecovery();
 
-    // Skip paint if entrance is done and scroll hasn't moved (and we're not
-    // mid-catch-up — that needs to keep advancing even when scroll is idle).
+    // Skip paint if entrance is done and scroll hasn't moved (and the lerp
+    // isn't still settling — that must keep advancing while input is idle).
     // Recovery frames are an exception: they repaint while scroll is idle.
-    if (entranceDone && !scrollChanged && !inCatchUp) {
+    if (entranceDone && !scrollChanged && !settling) {
       if (recoveryFramesLeft > 0) {
         recoveryFramesLeft--;
       } else {
@@ -3067,11 +3067,16 @@ buildLetterSpans('name-austin', 'Austin');
     // translateY never lags or leads the layers it sits in front of.
     if (typeof window.updateBloomScroll === 'function') window.updateBloomScroll();
 
-    raf = (entranceDone && !inCatchUp && recoveryFramesLeft <= 0) ? null : requestAnimationFrame(tick);
+    raf = (entranceDone && !settling && recoveryFramesLeft <= 0) ? null : requestAnimationFrame(tick);
   }
 
   function scheduleRaf() {
-    if (!raf && !paused) raf = requestAnimationFrame(tick);
+    if (!raf && !paused) {
+      // Fresh dt baseline so the first lerp step after an idle stop isn't
+      // scaled up by the stale timestamp gap.
+      prevTickTs = 0;
+      raf = requestAnimationFrame(tick);
+    }
   }
 
   function resume() {
@@ -3123,10 +3128,7 @@ buildLetterSpans('name-austin', 'Austin');
           if (urlBarTimer) clearTimeout(urlBarTimer);
           urlBarTimer = setTimeout(() => {
             urlBarSettling = false;
-            if (lastScrollY >= 0) {
-              catchUpFrom = lastScrollY;
-              catchUpPending = true;
-            }
+            // The lerp eases from the frozen position to the live value.
             scheduleRaf();
           }, 220);
         }
