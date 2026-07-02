@@ -866,6 +866,21 @@
       pointer-events: none;
       mix-blend-mode: screen;
     }
+    /* Candlelit dust behind the envelope (above the screen's bg, below the
+       envelope itself at z2). */
+    #envMoteCanvas {
+      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;
+      pointer-events: none;
+    }
+    /* Sparse dust over the dark RSVP finale. The canvas is positioned, which
+       would paint it above the section's static content, so the section is
+       lifted onto its own layer. */
+    #rsvp-motes-wrap { position: relative; }
+    #rsvpMoteCanvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    #rsvp-motes-wrap .section { position: relative; z-index: 1; }
     #bloomCanvas {
       position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4;
       pointer-events: none;
@@ -1471,6 +1486,7 @@
      ENVELOPE SCREEN
 ═══════════════════════════════════ -->
 <div id="envelope-screen" onclick="openEnvelope()">
+  <canvas id="envMoteCanvas" aria-hidden="true"></canvas>
   <div class="envelope-wrap" id="envWrap">
     <svg class="env" viewBox="0 0 420 280" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -1936,7 +1952,8 @@
 <!-- ═══════════════════════════════════
      RSVP
 ═══════════════════════════════════ -->
-<div class="section-bg-dark">
+<div class="section-bg-dark" id="rsvp-motes-wrap">
+  <canvas id="rsvpMoteCanvas" aria-hidden="true"></canvas>
   <div class="section" id="sec-rsvp" style="color: var(--ivory)">
     <div class="section-sep">
       <div class="sep-line" style="background: linear-gradient(to right, transparent, rgba(250,246,240,0.3), transparent)"></div>
@@ -3297,7 +3314,7 @@ function openEnvelope() {
         revealLetters('name-ampersand', 650);
         revealLetters('name-austin', 820);
         setTimeout(() => { startRoseBlooms(); }, 1900);
-        setTimeout(() => { twin.remove(); flash.remove(); }, 1700);
+        setTimeout(() => { twin.remove(); flash.remove(); stopEnvelopeMotes(); }, 1700);
       }, Math.max(0, coverAt - performance.now()));
     });
   }, MATCH_CUT);
@@ -3306,16 +3323,17 @@ function openEnvelope() {
 // ─────────────────────────────────────
 // GOLDEN MOTES
 // ─────────────────────────────────────
-function startGoldenMotes() {
-  // Guard against a second init (mirrors initHeroParallax). The envelopeOpened
-  // flag already makes the two call paths mutually exclusive, but without this
-  // a stray double-call would stack a second RAF loop, resize listener and
-  // IntersectionObserver, none of which are ever torn down.
-  if (startGoldenMotes._started) return;
-  startGoldenMotes._started = true;
-
-  const canvas = document.getElementById('petalCanvas');
+// Shared golden-dust engine. Each field owns a canvas, mote set and RAF loop;
+// opts tune density/brightness per surface. depthParallax gives every mote a
+// per-depth scroll offset driven from window.__heroScrollY, so the dust sits
+// at its own distance between the parallax layers and moves in lockstep with
+// them (foreground motes drift faster than the far church).
+function createMoteField(canvas, opts = {}) {
   const ctx = canvas.getContext('2d');
+  const areaPerMote = opts.areaPerMote || 30000;
+  const minCount = opts.minCount !== undefined ? opts.minCount : 36;
+  const dim = opts.dim || 1;
+  const depthParallax = !!opts.depthParallax;
   const goldPalettes = [
     [255, 248, 196, 255, 196, 66, 218, 133, 20],
     [255, 252, 218, 255, 213, 92, 232, 155, 35],
@@ -3352,6 +3370,9 @@ function startGoldenMotes() {
     }
   }
   window.addEventListener('resize', resize);
+  // Canvas boxes can also resize without the window (e.g. the RSVP section's
+  // form → success swap changes the wrapper height).
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
   function createMote() {
     const isHeroMote = Math.random() < 0.16;
@@ -3359,6 +3380,10 @@ function startGoldenMotes() {
     return {
       x: Math.random() * W,
       y: Math.random() * H,
+      // Scroll-depth multiplier (used when depthParallax is on). Bigger/
+      // brighter motes read as closer, so they ride nearer the bushes
+      // (-0.75/-0.5) while small dust hangs back near the church (-0.24).
+      depth: isHeroMote ? -(0.35 + Math.random() * 0.4) : -(0.08 + Math.random() * 0.18),
       r: isHeroMote ? 0.95 + Math.random() * 1.15 : 0.38 + Math.random() * 0.95,
       glow: isHeroMote ? 7.2 + Math.random() * 2.2 : 5.2 + Math.random() * 1.8,
       intensity: isHeroMote ? 1.22 : 1,
@@ -3372,19 +3397,20 @@ function startGoldenMotes() {
   }
 
   function createMotes() {
-    const count = Math.max(36, Math.round((W * H) / 30000));
+    const count = Math.max(minCount, Math.round((W * H) / areaPerMote));
     return Array.from({ length: count }, createMote);
   }
 
   resize();
 
-  function drawMote(mote, ts) {
+  function drawMote(mote, ts, offY) {
+    const y = mote.y + offY;
     const wave = (Math.sin((ts * mote.twinkleSpeed) + mote.twinkleOffset) + 1) * 0.5;
     const pulse = Math.pow(wave, 2.4);
-    const alpha = Math.min(1, (0.46 + pulse * 0.54) * mote.intensity);
+    const alpha = Math.min(1, (0.46 + pulse * 0.54) * mote.intensity) * dim;
     const glowRadius = mote.r * mote.glow * (0.86 + pulse * 0.28);
     const [coreR, coreG, coreB, midR, midG, midB, edgeR, edgeG, edgeB] = mote.palette;
-    const gradient = ctx.createRadialGradient(mote.x, mote.y, 0, mote.x, mote.y, glowRadius);
+    const gradient = ctx.createRadialGradient(mote.x, y, 0, mote.x, y, glowRadius);
     gradient.addColorStop(0, `rgba(${coreR}, ${coreG}, ${coreB}, ${alpha})`);
     gradient.addColorStop(0.12, `rgba(${midR}, ${midG}, ${midB}, ${alpha * 0.96})`);
     gradient.addColorStop(0.38, `rgba(${midR}, ${midG}, ${midB}, ${alpha * 0.62})`);
@@ -3395,19 +3421,19 @@ function startGoldenMotes() {
     ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(mote.x, mote.y, glowRadius, 0, Math.PI * 2);
+    ctx.arc(mote.x, y, glowRadius, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = `rgba(255, 252, 222, ${Math.min(1, alpha * 1.12)})`;
     ctx.beginPath();
-    ctx.arc(mote.x, mote.y, Math.max(0.55, mote.r * (0.72 + pulse * 0.2)), 0, Math.PI * 2);
+    ctx.arc(mote.x, y, Math.max(0.55, mote.r * (0.72 + pulse * 0.2)), 0, Math.PI * 2);
     ctx.fill();
 
     if (mote.glint && pulse > 0.48) {
-      const glintAlpha = (pulse - 0.48) * 1.35;
+      const glintAlpha = (pulse - 0.48) * 1.35 * dim;
       const glintLength = glowRadius * (0.7 + pulse * 0.45);
       const glintGradient = ctx.createLinearGradient(
-        mote.x - glintLength, mote.y, mote.x + glintLength, mote.y
+        mote.x - glintLength, y, mote.x + glintLength, y
       );
       glintGradient.addColorStop(0, 'rgba(255, 190, 55, 0)');
       glintGradient.addColorStop(0.5, `rgba(255, 235, 145, ${glintAlpha})`);
@@ -3415,10 +3441,10 @@ function startGoldenMotes() {
       ctx.strokeStyle = glintGradient;
       ctx.lineWidth = 0.55;
       ctx.beginPath();
-      ctx.moveTo(mote.x - glintLength, mote.y);
-      ctx.lineTo(mote.x + glintLength, mote.y);
-      ctx.moveTo(mote.x, mote.y - glintLength * 0.72);
-      ctx.lineTo(mote.x, mote.y + glintLength * 0.72);
+      ctx.moveTo(mote.x - glintLength, y);
+      ctx.lineTo(mote.x + glintLength, y);
+      ctx.moveTo(mote.x, y - glintLength * 0.72);
+      ctx.lineTo(mote.x, y + glintLength * 0.72);
       ctx.stroke();
     }
     ctx.restore();
@@ -3438,10 +3464,12 @@ function startGoldenMotes() {
     ctx.clearRect(0, 0, W, H);
     const dt = prevTs ? Math.min(40, ts - prevTs) : 16;
     prevTs = ts;
+    // Same smoothed scrollY the parallax layers painted this frame.
+    const scrollBase = depthParallax ? (window.__heroScrollY || 0) : 0;
 
     motes.forEach((mote) => {
       stepMote(mote, dt);
-      drawMote(mote, ts);
+      drawMote(mote, ts, scrollBase * mote.depth);
     });
 
     raf = requestAnimationFrame(animate);
@@ -3457,14 +3485,59 @@ function startGoldenMotes() {
     isRunning = false;
     cancelAnimationFrame(raf);
   }
-  startLoop();
+
+  return { start: startLoop, stop: stopLoop };
+}
+
+// Starts a field and ties its run state to an element's visibility.
+function startObservedMoteField(canvas, watchEl, opts) {
+  const field = createMoteField(canvas, opts);
+  const obs = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) field.start();
+    else field.stop();
+  }, { threshold: 0 });
+  obs.observe(watchEl);
+  return field;
+}
+
+function startGoldenMotes() {
+  // Guard against a second init (mirrors initHeroParallax). The envelopeOpened
+  // flag already makes the two call paths mutually exclusive, but without this
+  // a stray double-call would stack a second RAF loop, resize listener and
+  // IntersectionObserver, none of which are ever torn down.
+  if (startGoldenMotes._started) return;
+  startGoldenMotes._started = true;
 
   const heroEl = document.getElementById('hero');
-  const obs = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting) startLoop();
-    else stopLoop();
-  }, { threshold: 0 });
-  obs.observe(heroEl);
+  const field = startObservedMoteField(
+    document.getElementById('petalCanvas'), heroEl, { depthParallax: true }
+  );
+  field.start();
+}
+
+// Dim candlelit dust on the envelope screen, so the hero's atmosphere is
+// already present before the seal breaks and carries across the opening.
+let envelopeMoteField = null;
+
+function startEnvelopeMotes() {
+  if (envelopeOpened) return; // skip path never shows the envelope screen
+  const canvas = document.getElementById('envMoteCanvas');
+  if (!canvas) return;
+  envelopeMoteField = createMoteField(canvas, { areaPerMote: 52000, minCount: 20, dim: 0.55 });
+  envelopeMoteField.start();
+}
+
+function stopEnvelopeMotes() {
+  if (envelopeMoteField) { envelopeMoteField.stop(); envelopeMoteField = null; }
+}
+
+// Sparse motes over the dark RSVP finale — the site ends in the same
+// candlelight it began in. Visibility-gated so it costs nothing until the
+// guest reaches the bottom of the page.
+function startRsvpMotes() {
+  const canvas = document.getElementById('rsvpMoteCanvas');
+  if (!canvas) return;
+  startObservedMoteField(canvas, canvas.parentElement, { areaPerMote: 90000, minCount: 10, dim: 0.5 });
 }
 
 // ─────────────────────────────────────
@@ -3827,6 +3900,11 @@ if (returningFromHotels || resumingOpenedInvitation) {
     history.replaceState(null, '', cleanUrl.pathname + (qs ? '?' + qs : '') + cleanUrl.hash);
   }
 }
+
+// After the skip check, so the envelope field is never started on a path
+// where the envelope screen is already hidden.
+startEnvelopeMotes();
+startRsvpMotes();
 </script>
 </body>
 </html>
