@@ -107,6 +107,11 @@
       z-index: 2;
     }
     @keyframes pulse { 0%,100%{opacity:0.45} 50%{opacity:0.95} }
+    #envelope-screen.opening .env-hint {
+      animation: none;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
 
     /* SVG envelope */
     .envelope-wrap {
@@ -149,9 +154,21 @@
     /* flap */
     .flap-group {
       transform-origin: 210px 80px;
-      transition: transform 11.5s cubic-bezier(0.23, 0.74, 0.24, 1);
     }
-    .flap-group.open { transform: rotateX(-152deg) translateY(-2px); }
+    /* Static transform is the resting pose; the keyframes override it while
+       running and settle on the same value (skipEnvelopeInstantly suppresses
+       the animation so the pose applies instantly). Slight overshoot past
+       -152° so the paper feels like it has weight. */
+    .flap-group.open {
+      transform: rotateX(-152deg) translateY(-2px);
+      animation: flapFold 1.45s forwards;
+    }
+    @keyframes flapFold {
+      0%   { transform: rotateX(0deg) translateY(0); animation-timing-function: cubic-bezier(0.5, 0.05, 0.55, 0.95); }
+      38%  { transform: rotateX(-90deg) translateY(-1px); animation-timing-function: cubic-bezier(0.3, 0.4, 0.35, 1); }
+      74%  { transform: rotateX(-159deg) translateY(-2px); animation-timing-function: cubic-bezier(0.4, 0, 0.5, 1); }
+      100% { transform: rotateX(-152deg) translateY(-2px); }
+    }
 
     .env-flap {
       fill: url(#envFlapGrad);
@@ -175,6 +192,7 @@
 
     /* wax seal */
     .seal-group {
+      transform-box: fill-box;
       transform-origin: center;
       backface-visibility: visible;
     }
@@ -189,18 +207,136 @@
       text-anchor: middle;
       dominant-baseline: middle;
       pointer-events: none;
-      opacity: 1;
-      transition: opacity 0s linear 2.23s;
     }
-    .flap-group.open .seal-monogram { opacity: 0; }
+    /* On tap the seal pops, cracks free, and falls out of frame; the monogram
+       goes with it. seal-gone is the instant version for the skip path. */
+    .envelope-wrap.seal-cracked .seal-group {
+      animation: sealBreak 0.95s forwards;
+    }
+    .envelope-wrap.seal-gone .seal-group {
+      animation: none;
+      opacity: 0;
+    }
+    @keyframes sealBreak {
+      0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1.35); }
+      30%  { transform: translateY(-3px) rotate(-6deg) scale(1.14); opacity: 1; animation-timing-function: cubic-bezier(0.55, 0, 0.75, 0.4); }
+      70%  { transform: translateY(64px) rotate(20deg) scale(1.08); opacity: 0.92; animation-timing-function: cubic-bezier(0.35, 0, 0.7, 0.55); }
+      100% { transform: translateY(160px) rotate(44deg) scale(1.04); opacity: 0; }
+    }
 
-    /* letter sliding out */
+    /* letter sliding out. -150px lifts the card fully clear of the envelope
+       pocket (card bottom y222 → 72, above the front triangles' top edge), so
+       the match-cut twin swap happens with no part of the card hidden — the
+       swap would otherwise pop the tucked-in lower third in front of the
+       envelope in a single frame. */
     .env-letter {
       transform: translateY(55px);
-      transition: transform 2.35s cubic-bezier(0.42, 0, 0.22, 1);
+      transition: transform 1.05s cubic-bezier(0.33, 0, 0.18, 1);
     }
     .env-letter.open {
-      transform: translateY(-72px);
+      transform: translateY(-150px);
+    }
+
+    /* Match-cut letter twin: an HTML copy of the SVG letter, positioned over
+       it by JS, that zooms toward the viewer until its paper fills the screen.
+       All geometry is in --lu (letter units, 1/310th of the letter's on-screen
+       width) so it scales with the envelope; the SVG letter's coordinates map
+       1:1 onto --lu multiples. */
+    .letter-twin {
+      position: absolute;
+      z-index: 3;
+      background: #f9f0e2;
+      border-radius: calc(var(--lu) * 3);
+      transform-origin: center;
+      will-change: transform;
+      overflow: hidden;
+    }
+    /* The scale target overshoots cover by 1.5× and the paper starts fading
+       at 55% (≈ where it reaches ~90% viewport cover), so the zoom never
+       pauses — you keep moving through the letter as the hero comes in. */
+    .letter-twin.zoom {
+      animation: letterZoom 1.6s cubic-bezier(0.5, 0, 0.4, 1) forwards;
+    }
+    @keyframes letterZoom {
+      0%   { transform: scale(1); opacity: 1; }
+      55%  { opacity: 1; }
+      100% { transform: scale(calc(var(--letter-cover-scale, 8) * 1.5)); opacity: 0; }
+    }
+    .letter-twin .lt-border {
+      position: absolute;
+      inset: calc(var(--lu) * 10);
+      border: calc(var(--lu) * 0.8) solid rgba(207, 173, 121, 0.7);
+    }
+    .letter-twin .lt-rule {
+      position: absolute;
+      left: calc(var(--lu) * 29);
+      right: calc(var(--lu) * 29);
+      height: calc(var(--lu) * 0.55);
+      background: #ceb79a;
+    }
+    .letter-twin .lt-text {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .letter-twin .lt-invited {
+      top: calc(var(--lu) * 51);
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: calc(var(--lu) * 19);
+      color: #8b2a1d;
+    }
+    .letter-twin .lt-wedding-of {
+      top: calc(var(--lu) * 83);
+      font-family: 'Playfair Display SC', serif;
+      font-size: calc(var(--lu) * 10.5);
+      letter-spacing: calc(var(--lu) * 2.2);
+      color: #735847;
+    }
+    .letter-twin .lt-names {
+      top: calc(var(--lu) * 103);
+      font-family: 'Alex Brush', cursive;
+      font-size: calc(var(--lu) * 27);
+      color: #2f1b12;
+    }
+    .letter-twin .lt-divider {
+      position: absolute;
+      top: calc(var(--lu) * 140);
+      left: calc(var(--lu) * 71);
+      width: calc(var(--lu) * 168);
+      height: calc(var(--lu) * 0.85);
+      background: rgba(175, 124, 52, 0.65);
+    }
+    .letter-twin .lt-date {
+      top: calc(var(--lu) * 154);
+      font-family: 'Playfair Display SC', serif;
+      font-size: calc(var(--lu) * 9.4);
+      letter-spacing: calc(var(--lu) * 3.2);
+      color: #614837;
+    }
+
+    /* Warm light bloom over the envelope→hero crossover. */
+    .reveal-flash {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(ellipse 90% 75% at 50% 42%,
+        rgba(255, 243, 214, 0.98) 0%,
+        rgba(255, 219, 156, 0.55) 46%,
+        rgba(255, 200, 120, 0) 78%);
+    }
+    .reveal-flash.on {
+      animation: revealFlash 1.35s ease-out forwards;
+    }
+    @keyframes revealFlash {
+      0%   { opacity: 0; }
+      16%  { opacity: 1; }
+      100% { opacity: 0; }
     }
 
     /* ══════════════════════════════════════
@@ -1385,11 +1521,11 @@
         <rect x="24" y="84" width="372" height="192" rx="3" fill="none" stroke="#f0d8b9" stroke-width="0.6" opacity="0.5"/>
       </g>
 
-      <!-- top flap behind the letter after the fold crossover -->
+      <!-- top flap behind the letter after the fold crossover. No seal here:
+           the seal cracks off and falls before the flap folds. -->
       <g class="flap-group flap-back-layer" id="envFlapBackGroup">
         <polygon class="flap-back-static" points="20,80 210,185 400,80"/>
         <polygon class="env-paper-overlay" points="20,80 210,185 400,80"/>
-        <image class="seal-img" href="img/wax-seal.webp" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
       </g>
 
       <!-- invitation starts inside envelope -->
@@ -1423,15 +1559,19 @@
 
       </g>
 
-      <!-- top flap + attached seal (folds as one piece) -->
+      <!-- top flap -->
       <g class="flap-group flap-front-layer" id="envFlapFrontGroup">
         <polygon class="env-flap" id="envFlap" points="20,80 210,185 400,80"/>
         <polygon class="env-paper-overlay" points="20,80 210,185 400,80"/>
-        <g class="seal-group" id="sealGroup">
-          <circle cx="210" cy="185" r="24" fill="#8a1c1c"/>
-          <image class="seal-img" href="img/wax-seal.webp" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
-          <text class="seal-monogram" x="210" y="186">C&amp;A</text>
-        </g>
+      </g>
+
+      <!-- wax seal. A sibling of the flap (not a child) so that when it
+           cracks off and falls, the flap folding underneath it doesn't sweep
+           it along with the rotateX. -->
+      <g class="seal-group" id="sealGroup">
+        <circle cx="210" cy="185" r="24" fill="#8a1c1c"/>
+        <image class="seal-img" href="img/wax-seal.webp" x="181" y="156" width="58" height="58" preserveAspectRatio="xMidYMid meet"/>
+        <text class="seal-monogram" x="210" y="186">C&amp;A</text>
       </g>
     </svg>
   </div>
@@ -3038,6 +3178,51 @@ function rememberEnvelopeOpened() {
   } catch (_) {}
 }
 
+// Builds an HTML copy of the SVG letter, positioned exactly over it, for the
+// match cut. A composited div transform is used for the zoom instead of
+// scaling the SVG group because HTML transforms rasterize predictably on
+// mobile WebKit. Geometry: the SVG letter rect is 310 units wide, so
+// --lu = onScreenWidth / 310 maps SVG coordinates 1:1 onto CSS calc() sizes.
+function buildLetterTwin() {
+  const letter = document.getElementById('envLetter');
+  const rect = letter.getBoundingClientRect();
+  const twin = document.createElement('div');
+  twin.className = 'letter-twin';
+  twin.style.left = `${rect.left}px`;
+  twin.style.top = `${rect.top}px`;
+  twin.style.width = `${rect.width}px`;
+  twin.style.height = `${rect.height}px`;
+  twin.style.setProperty('--lu', `${rect.width / 310}px`);
+
+  // Scale needed for the twin (scaling from its own centre) to cover the
+  // whole viewport, plus a small margin.
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const coverScale = Math.max(
+    (2 * Math.max(cx, vw - cx)) / rect.width,
+    (2 * Math.max(cy, vh - cy)) / rect.height
+  ) * 1.06;
+  twin.style.setProperty('--letter-cover-scale', coverScale.toFixed(3));
+
+  // Copy the SVG letter's current text so EN/ES translations carry over.
+  const [invited, weddingOf, names, date] = [...letter.querySelectorAll('text')]
+    .map((t) => t.textContent);
+  twin.innerHTML = `
+    <div class="lt-border"></div>
+    <div class="lt-rule" style="top: calc(var(--lu) * 58); opacity: 0.45;"></div>
+    <div class="lt-rule" style="top: calc(var(--lu) * 78); opacity: 0.35;"></div>
+    <div class="lt-rule" style="top: calc(var(--lu) * 98); opacity: 0.32;"></div>
+    <div class="lt-text lt-invited">${invited}</div>
+    <div class="lt-text lt-wedding-of">${weddingOf}</div>
+    <div class="lt-text lt-names">${names}</div>
+    <div class="lt-divider"></div>
+    <div class="lt-text lt-date">${date}</div>
+  `;
+  return twin;
+}
+
 function openEnvelope() {
   if (envelopeOpened) return;
   envelopeOpened = true;
@@ -3052,40 +3237,68 @@ function openEnvelope() {
   const screen = document.getElementById('envelope-screen');
   const hero = document.getElementById('hero');
 
-  // 1. Flap folds up with seal still attached
-  flapFrontGroup.classList.add('open');
-  flapBackGroup.classList.add('open');
+  // Opening timeline (ms after tap). Each beat starts as the previous one is
+  // finishing, so the sequence reads as one continuous motion, not steps.
+  const FLAP_START = 650;               // flap folds while the seal is still falling
+  const PAST_FOLD = FLAP_START + 550;   // flapFold crosses -90° at its 38% keyframe
+  const LETTER_OUT = FLAP_START + 700;  // letter emerges behind the folded-back flap
+  const MATCH_CUT = LETTER_OUT + 1080;  // letter slide (1.05s) has settled
+  const REVEAL_DELAY = 800;             // just before letterZoom's paper fade begins (55% of 1.6s)
 
-  // 2. At the 90-degree fold point, swap to the back flap layer and
-  // start pulling the letter out from the pocket.
-  setTimeout(() => {
-    if (envWrap && letter) {
-      envWrap.classList.add('past-fold');
-    }
-  }, 2230);
+  // 1. The wax seal cracks off and falls; the tap hint fades.
+  screen.classList.add('opening');
+  envWrap.classList.add('seal-cracked');
 
+  // 2. Flap folds up.
   setTimeout(() => {
-    if (letter) {
-      letter.removeAttribute('clip-path');
-      letter.classList.add('open');
-    }
-  }, 2530);
+    flapFrontGroup.classList.add('open');
+    flapBackGroup.classList.add('open');
+  }, FLAP_START);
 
-  // 3. Fade envelope screen, reveal hero
+  // 3. At the 90-degree fold point, swap to the back flap layer.
+  setTimeout(() => { envWrap.classList.add('past-fold'); }, PAST_FOLD);
+
+  // 4. Pull the letter out from the pocket.
   setTimeout(() => {
+    letter.removeAttribute('clip-path');
+    letter.classList.add('open');
+  }, LETTER_OUT);
+
+  // 5. Match cut: the twin zooms toward the viewer until its paper fills the
+  // viewport, then the hero fades in through a warm flash of light — the
+  // invitation "becomes" the scene.
+  setTimeout(() => {
+    const twin = buildLetterTwin();
+    screen.appendChild(twin);
+    letter.style.opacity = '0';
+    requestAnimationFrame(() => twin.classList.add('zoom'));
+
+    const flash = document.createElement('div');
+    flash.className = 'reveal-flash';
+    document.body.appendChild(flash);
+
+    // Reveal as the twin approaches full cover — or once the hero images have
+    // decoded, whichever is later — so the hero never flashes in half-loaded.
+    const coverAt = performance.now() + REVEAL_DELAY;
     prepareHeroImages('high').finally(() => {
-      screen.classList.add('hide');
-      hero.classList.add('visible');
-      initHeroParallax();
-      startGoldenMotes();
-      revealLetters('name-cynthia', 250);
-      revealLetters('name-ampersand', 650);
-      revealLetters('name-austin', 820);
+      setTimeout(() => {
+        flash.classList.add('on');
+        screen.classList.add('hide');
+        // Fade the envelope graphic faster than the screen, so its open-flap
+        // silhouette doesn't ghost through the thinning letter paper.
+        envWrap.style.transition = 'opacity 0.3s ease';
+        envWrap.style.opacity = '0';
+        hero.classList.add('visible');
+        initHeroParallax();
+        startGoldenMotes();
+        revealLetters('name-cynthia', 250);
+        revealLetters('name-ampersand', 650);
+        revealLetters('name-austin', 820);
+        setTimeout(() => { startRoseBlooms(); }, 1900);
+        setTimeout(() => { twin.remove(); flash.remove(); }, 1700);
+      }, Math.max(0, coverAt - performance.now()));
     });
-  }, 3900);
-
-  // 4. Start rose bloom sprites once the hero has settled
-  setTimeout(() => { startRoseBlooms(); }, 5900);
+  }, MATCH_CUT);
 }
 
 // ─────────────────────────────────────
@@ -3580,9 +3793,10 @@ function skipEnvelopeInstantly() {
   const screen    = document.getElementById('envelope-screen');
   const hero      = document.getElementById('hero');
 
-  // Suppress transitions so state changes are instant
+  // Suppress transitions and keyframe animations so state changes are instant
+  // (the .open flap pose and .seal-gone rule provide the static end states).
   [envWrap, flapFront, flapBack, letter].forEach(el => {
-    if (el) el.style.transition = 'none';
+    if (el) { el.style.transition = 'none'; el.style.animation = 'none'; }
   });
   if (screen) { screen.style.transition = 'none'; screen.style.opacity = '0'; screen.style.visibility = 'hidden'; screen.style.pointerEvents = 'none'; }
   if (hero)   { hero.style.transition = 'none'; hero.classList.add('visible'); }
@@ -3590,6 +3804,7 @@ function skipEnvelopeInstantly() {
   flapFront && flapFront.classList.add('open');
   flapBack  && flapBack.classList.add('open');
   envWrap   && envWrap.classList.add('past-fold');
+  envWrap   && envWrap.classList.add('seal-gone');
   if (letter) { letter.removeAttribute('clip-path'); letter.classList.add('open'); }
 
   initHeroParallax();
