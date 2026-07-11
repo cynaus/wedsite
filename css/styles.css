@@ -235,6 +235,73 @@ footer {
   outline-offset: 2px;
 }
 
+/* ── TOP-RIGHT CONTROLS ──────────────────────────────────── */
+.music-toggle {
+  position: fixed;
+  top: 1rem;
+  right: calc(1rem + 2.4rem + 0.5rem);
+  z-index: 220;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid rgba(250,246,240,0.35);
+  background: rgba(18, 2, 2, 0.78);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+html.invitation-opened .music-toggle,
+#hero.visible ~ .music-toggle { display: inline-flex; }
+.music-toggle:hover {
+  transform: translateY(-2px);
+  background: rgba(58, 10, 10, 0.95);
+  border-color: rgba(250,246,240,0.55);
+}
+.music-toggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.music-toggle[data-playing="true"] {
+  border-color: rgba(201,168,76,0.8);
+  background: rgba(58, 10, 10, 0.96);
+}
+.music-toggle-icon {
+  position: relative;
+  display: block;
+  width: 1.32rem;
+  height: 1.32rem;
+  color: rgba(250,246,240,0.88);
+}
+.music-toggle-note {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+.music-toggle-slash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.62rem;
+  height: 2px;
+  background: var(--red);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(18, 2, 2, 0.5);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(-42deg) scaleX(0.72);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.music-toggle[data-playing="true"] .music-toggle-icon {
+  color: var(--gold);
+}
+.music-toggle[data-playing="false"] .music-toggle-note {
+  opacity: 0.72;
+}
+.music-toggle[data-playing="false"] .music-toggle-slash {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(-42deg) scaleX(1);
+}
 /* ── JUMP MENU (top-right section navigator) ─────────────── */
 .jump-menu {
   position: fixed;
@@ -337,6 +404,12 @@ html.invitation-opened .jump-menu,
   .jump-menu {
     top: calc(0.75rem + env(safe-area-inset-top, 0px));
     right: 0.75rem;
+  }
+  .music-toggle {
+    top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    right: calc(0.75rem + 2.1rem + 0.45rem);
+    width: 2.1rem;
+    height: 2.1rem;
   }
   .jump-menu-trigger { width: 2.1rem; height: 2.1rem; }
   .jump-menu-panel a { padding: 0.65rem 1rem; font-size: 0.72rem; }

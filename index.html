@@ -118,6 +118,7 @@
     .envelope-wrap {
       position: relative;
       width: clamp(270px, 62vw, 450px);
+      aspect-ratio: 420 / 280;
       z-index: 2;
       perspective: 1400px;
     }
@@ -140,7 +141,19 @@
       z-index: -1;
     }
 
-    svg.env { width: 100%; height: auto; overflow: visible; }
+    /* iOS Safari clips transformed SVG children to the root viewBox even with
+       overflow: visible. The SVG has 155 units of real headroom above y=0 for
+       the pulled-out letter; these dimensions map the original 420x280 art
+       back onto the wrapper so the resting envelope layout is unchanged. */
+    svg.env {
+      position: absolute;
+      left: 0;
+      top: -55.357142857%;
+      width: 100%;
+      height: 155.357142857%;
+      overflow: visible;
+      display: block;
+    }
 
     /* envelope body */
     .env-body { fill: url(#envBodyGrad); filter: url(#roughPaper); }
@@ -233,6 +246,9 @@
     .env-letter {
       transform: translateY(55px);
       transition: transform 1.45s cubic-bezier(0.33, 0, 0.22, 1);
+    }
+    .env-letter.released {
+      clip-path: none;
     }
     .env-letter.open {
       transform: translateY(-150px);
@@ -1529,7 +1545,7 @@
 <div id="envelope-screen" onclick="openEnvelope()">
   <canvas id="envMoteCanvas" aria-hidden="true"></canvas>
   <div class="envelope-wrap" id="envWrap">
-    <svg class="env" viewBox="0 0 420 280" xmlns="http://www.w3.org/2000/svg">
+    <svg class="env" viewBox="0 -155 420 435" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="roughPaper" x="-20%" y="-20%" width="140%" height="140%">
           <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="1" seed="8" result="noise"/>
@@ -2077,6 +2093,27 @@
   <p>Cynthia &amp; Austin &nbsp;·&nbsp; February 27, 2027 &nbsp;·&nbsp; Santa Barbara, California</p>
 </footer>
 
+<audio id="background-music" loop preload="metadata">
+  <source src="audio/debussy-arabesque-no-1-piano-short.mp3" type="audio/mpeg">
+</audio>
+
+<button type="button"
+        class="music-toggle"
+        id="music-toggle"
+        data-playing="false"
+        aria-pressed="false"
+        aria-label="Play background music"
+        title="Play background music">
+  <span class="music-toggle-icon" aria-hidden="true">
+    <svg class="music-toggle-note" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+      <path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="6" cy="18" r="3" fill="currentColor"/>
+      <circle cx="17" cy="16" r="3" fill="currentColor"/>
+    </svg>
+    <span class="music-toggle-slash"></span>
+  </span>
+</button>
+
 <div class="jump-menu" id="jump-menu" data-open="false">
   <button type="button"
           class="jump-menu-trigger"
@@ -2231,6 +2268,7 @@ window.addEventListener('pageshow', () => {
 // ─────────────────────────────────────
 const LANGUAGE_STORAGE_KEY = 'preferredLanguage';
 const LANGUAGE_RETURN_STORAGE_KEY = 'preferredLanguageFromHotels';
+const MUSIC_STORAGE_KEY = 'weddingBackgroundMusic';
 let currentLanguage = 'en';
 let rsvpSubmitting = false;
 
@@ -2246,6 +2284,8 @@ const I18N_INDEX = {
     heroDate: 'Saturday, February 27th, 2027',
     heroLocation: 'Santa Barbara, California',
     scrollHint: 'Scroll to continue',
+    musicPlayLabel: 'Play background music',
+    musicPauseLabel: 'Pause background music',
     countdownUnits: {
       days: { one: 'Day', other: 'Days' },
       hours: { one: 'Hour', other: 'Hours' },
@@ -2359,6 +2399,8 @@ const I18N_INDEX = {
     heroDate: 'Sábado, 27 de febrero de 2027',
     heroLocation: 'Santa Bárbara, California',
     scrollHint: 'Desliza para continuar',
+    musicPlayLabel: 'Reproducir música de fondo',
+    musicPauseLabel: 'Pausar música de fondo',
     countdownUnits: {
       days: { one: 'Día', other: 'Días' },
       hours: { one: 'Hora', other: 'Horas' },
@@ -2508,6 +2550,7 @@ function applyIndexTranslations(lang) {
       if (copy.jumpMenu[key]) a.textContent = copy.jumpMenu[key];
     });
   }
+  updateMusicToggleCopy();
 
   const envCardLines = document.querySelectorAll('#envLetter text');
   if (envCardLines[0]) envCardLines[0].textContent = copy.envCardLine1;
@@ -2703,6 +2746,115 @@ function initLanguageToggle() {
   });
 }
 
+// ─────────────────────────────────────
+// BACKGROUND MUSIC
+// ─────────────────────────────────────
+function getStoredBackgroundMusicPreference() {
+  try {
+    return localStorage.getItem(MUSIC_STORAGE_KEY);
+  } catch (_) {
+    return null;
+  }
+}
+
+function setStoredBackgroundMusicPreference(value) {
+  try {
+    localStorage.setItem(MUSIC_STORAGE_KEY, value);
+  } catch (_) {}
+}
+
+function updateMusicToggleCopy() {
+  const button = document.getElementById('music-toggle');
+  if (!button) return;
+
+  const copy = I18N_INDEX[currentLanguage] || I18N_INDEX.en;
+  const isPlaying = button.dataset.playing === 'true';
+  const label = isPlaying ? copy.musicPauseLabel : copy.musicPlayLabel;
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+}
+
+function syncMusicToggle() {
+  const audio = document.getElementById('background-music');
+  const button = document.getElementById('music-toggle');
+  if (!audio || !button) return;
+
+  const isPlaying = !audio.paused && !audio.ended;
+  button.dataset.playing = isPlaying ? 'true' : 'false';
+  button.setAttribute('aria-pressed', String(isPlaying));
+  updateMusicToggleCopy();
+}
+
+function playBackgroundMusic({ persistPreference = false } = {}) {
+  const audio = document.getElementById('background-music');
+  if (!audio) return Promise.resolve(false);
+
+  audio.volume = 0.38;
+  let playAttempt;
+  try {
+    playAttempt = audio.play();
+  } catch (err) {
+    syncMusicToggle();
+    console.warn('Background music playback was blocked or failed.', err);
+    return Promise.resolve(false);
+  }
+
+  if (playAttempt === undefined) {
+    syncMusicToggle();
+    if (persistPreference) setStoredBackgroundMusicPreference('on');
+    return Promise.resolve(true);
+  }
+
+  return playAttempt
+    .then(() => {
+      syncMusicToggle();
+      if (persistPreference) setStoredBackgroundMusicPreference('on');
+      return true;
+    })
+    .catch((err) => {
+      syncMusicToggle();
+      console.warn('Background music playback was blocked or failed.', err);
+      return false;
+    });
+}
+
+function pauseBackgroundMusic({ persistPreference = false } = {}) {
+  const audio = document.getElementById('background-music');
+  if (!audio) return;
+
+  audio.pause();
+  syncMusicToggle();
+  if (persistPreference) setStoredBackgroundMusicPreference('off');
+}
+
+function primeBackgroundMusicFromEnvelopeTap() {
+  if (getStoredBackgroundMusicPreference() === 'off') return;
+  playBackgroundMusic({ persistPreference: true });
+}
+
+function initBackgroundMusic() {
+  const audio = document.getElementById('background-music');
+  const button = document.getElementById('music-toggle');
+  if (!audio || !button) return;
+
+  audio.volume = 0.38;
+  syncMusicToggle();
+
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (audio.paused || audio.ended) {
+      playBackgroundMusic({ persistPreference: true });
+    } else {
+      pauseBackgroundMusic({ persistPreference: true });
+    }
+  });
+
+  audio.addEventListener('play', syncMusicToggle);
+  audio.addEventListener('pause', syncMusicToggle);
+  audio.addEventListener('ended', syncMusicToggle);
+  audio.addEventListener('error', syncMusicToggle);
+}
+
 const HERO_COUNTDOWN_TARGET_MS = new Date('2027-02-27T15:00:00-08:00').getTime();
 let heroCountdownTimer = null;
 
@@ -2740,6 +2892,7 @@ function startHeroCountdown() {
   }
 }
 
+initBackgroundMusic();
 initLanguageToggle();
 startHeroCountdown();
 
@@ -3379,6 +3532,7 @@ function openEnvelope() {
   if (envelopeOpened) return;
   envelopeOpened = true;
   rememberEnvelopeOpened();
+  primeBackgroundMusicFromEnvelopeTap();
   clearTimeout(heroWarmupTimer);
   prepareHeroImages('high');
 
@@ -3412,8 +3566,10 @@ function openEnvelope() {
 
   // 4. Pull the letter out from the pocket.
   setTimeout(() => {
+    letter.classList.add('released');
     letter.removeAttribute('clip-path');
-    letter.classList.add('open');
+    letter.getBoundingClientRect();
+    requestAnimationFrame(() => { letter.classList.add('open'); });
   }, LETTER_OUT);
 
   // 5. Match cut: the twin zooms toward the viewer until its paper fills the
@@ -3901,7 +4057,7 @@ function skipEnvelopeInstantly() {
   flapBack  && flapBack.classList.add('open');
   envWrap   && envWrap.classList.add('past-fold');
   envWrap   && envWrap.classList.add('seal-gone');
-  if (letter) { letter.removeAttribute('clip-path'); letter.classList.add('open'); }
+  if (letter) { letter.classList.add('released'); letter.removeAttribute('clip-path'); letter.classList.add('open'); }
 
   initHeroParallax();
   startGoldenMotes();
