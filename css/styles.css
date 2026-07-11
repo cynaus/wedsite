@@ -243,6 +243,7 @@ footer {
   z-index: 220;
   display: none;
 }
+html.invitation-opened .jump-menu,
 #hero.visible ~ .jump-menu { display: block; }
 .jump-menu-trigger {
   display: inline-flex;

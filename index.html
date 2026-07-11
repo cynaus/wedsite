@@ -49,6 +49,7 @@
 
       if (resumingOpenedInvitation) {
         document.documentElement.classList.add('resume-opened-invitation');
+        document.documentElement.classList.add('invitation-opened');
       }
     })();
   </script>
@@ -231,7 +232,7 @@
        envelope in a single frame. */
     .env-letter {
       transform: translateY(55px);
-      transition: transform 1.05s cubic-bezier(0.33, 0, 0.18, 1);
+      transition: transform 1.45s cubic-bezier(0.33, 0, 0.22, 1);
     }
     .env-letter.open {
       transform: translateY(-150px);
@@ -251,16 +252,16 @@
       will-change: transform;
       overflow: hidden;
     }
-    /* The scale target overshoots cover by 1.5× and the paper starts fading
-       at 55% (≈ where it reaches ~90% viewport cover), so the zoom never
-       pauses — you keep moving through the letter as the hero comes in. */
+    /* The scale target only slightly overshoots cover and the paper starts
+       fading early, so the transition reaches the hero before the invitation
+       does a heavy push-in. */
     .letter-twin.zoom {
-      animation: letterZoom 1.6s cubic-bezier(0.5, 0, 0.4, 1) forwards;
+      animation: letterZoom 1.45s cubic-bezier(0.5, 0, 0.4, 1) forwards;
     }
     @keyframes letterZoom {
       0%   { transform: scale(1); opacity: 1; }
-      55%  { opacity: 1; }
-      100% { transform: scale(calc(var(--letter-cover-scale, 8) * 1.5)); opacity: 0; }
+      38%  { opacity: 1; }
+      100% { transform: scale(calc(var(--letter-cover-scale, 8) * 1.08)); opacity: 0; }
     }
     .letter-twin .lt-border {
       position: absolute;
@@ -342,6 +343,20 @@
     /* ══════════════════════════════════════
       HERO SECTION
     ══════════════════════════════════════ */
+    #hero-story-transition {
+      position: relative;
+      height: calc(var(--hero-h, 100svh) * 1.5);
+      z-index: 2;
+    }
+    .hero-story-sticky {
+      position: sticky;
+      top: 0;
+      height: var(--hero-h, 100svh);
+      overflow: hidden;
+      isolation: isolate;
+      background: var(--ivory-dark);
+      will-change: opacity;
+    }
     #hero {
       position: relative;
       width: 100%; height: var(--hero-h, 100svh);
@@ -352,6 +367,17 @@
       transition: opacity 1.2s ease;
     }
     #hero.visible { opacity: 1; }
+    .hero-story-sticky #hero {
+      position: absolute;
+      inset: 0;
+      height: 100%;
+      z-index: 1;
+    }
+    .hero-story-real {
+      position: relative;
+      z-index: 1;
+      margin-top: calc(var(--hero-h, 100svh) * -1);
+    }
 
     .hero-parallax {
       position: absolute;
@@ -859,6 +885,21 @@
     }
 
     /* ══════════════════════════════════════
+      PINNED HERO → OUR STORY TRANSITION
+      JS scales this container while the sticky stage holds the viewport, then
+      fades the hero into the real Our Story section below.
+    ══════════════════════════════════════ */
+    html.hero-exit-on .hero-parallax {
+      transform-origin: center 42%;
+    }
+    html.hero-exit-on .hero-layer.arch-left::before {
+      transform: translate(calc(-50% - var(--arch-exit-x, 0px)), -50%);
+    }
+    html.hero-exit-on .hero-layer.arch-right::before {
+      transform: translate(calc(-50% + var(--arch-exit-x, 0px)), -50%);
+    }
+
+    /* ══════════════════════════════════════
       PETAL CANVAS
     ══════════════════════════════════════ */
     #petalCanvas {
@@ -866,6 +907,11 @@
       pointer-events: none;
       mix-blend-mode: screen;
     }
+    /* Degraded devices: drop the blend mode (it forces a backdrop-compositing
+       pass every frame — a flicker amplifier on weak GPUs, audit item #6).
+       The canvas already brightens internally via `lighter`, so the dust
+       still glows, just without brightening the layers beneath. */
+    html.hero-degraded #petalCanvas { mix-blend-mode: normal; }
     /* Candlelit dust behind the envelope (above the screen's bg, below the
        envelope itself at z2). */
     #envMoteCanvas {
@@ -881,11 +927,6 @@
       pointer-events: none;
     }
     #rsvp-motes-wrap .section { position: relative; z-index: 1; }
-    #bloomCanvas {
-      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4;
-      pointer-events: none;
-    }
-
     /* ══════════════════════════════════════
       ACCOMMODATIONS
     ══════════════════════════════════════ */
@@ -1598,61 +1639,65 @@
 <!-- ═══════════════════════════════════
      HERO / VENUE SECTION
 ═══════════════════════════════════ -->
-<div id="hero">
-  <div class="hero-parallax" aria-hidden="true">
-    <div class="hero-layer sky" id="pl-sky"></div>
-    <div class="hero-layer church" id="pl-church"></div>
-    <div class="hero-layer arch-left" id="pl-arch-left"></div>
-    <div class="hero-layer arch-right" id="pl-arch-right"></div>
-    <div class="hero-layer bushes" id="pl-bushes"></div>
-  </div>
-  <div class="hero-overlay"></div>
-  <canvas id="petalCanvas"></canvas>
-  <canvas id="bloomCanvas"></canvas>
+<div id="hero-story-transition">
+  <div class="hero-story-sticky">
+    <div id="hero">
+      <div class="hero-parallax" aria-hidden="true">
+        <div class="hero-layer sky" id="pl-sky"></div>
+        <div class="hero-layer church" id="pl-church"></div>
+        <div class="hero-layer arch-left" id="pl-arch-left"></div>
+        <div class="hero-layer arch-right" id="pl-arch-right"></div>
+        <div class="hero-layer bushes" id="pl-bushes"></div>
+      </div>
+      <div class="hero-overlay"></div>
+      <canvas id="petalCanvas"></canvas>
 
-  <div class="hero-content" id="pl-hero-content">
-    <p class="hero-eyebrow hero-copy-fade">You are cordially invited to</p>
-    <span class="hero-wedding-of hero-copy-fade">The Wedding of</span>
-    <h1 class="hero-names script">
-      <span id="name-cynthia"></span>
-      <span class="hero-ampersand" id="name-ampersand"></span>
-      <span id="name-austin"></span>
-    </h1>
-    <p class="hero-date fancy hero-copy-fade">Saturday, February 27th, 2027</p>
-    <p class="hero-location caps hero-copy-fade">Santa Barbara, California</p>
-    <div class="hero-countdown hero-copy-fade" id="hero-countdown" aria-live="polite">
-      <div class="countdown-unit">
-        <span class="countdown-value" data-countdown-value="days">0</span>
-        <span class="countdown-label" data-countdown-label="days">Days</span>
+      <div class="hero-content" id="pl-hero-content">
+        <p class="hero-eyebrow hero-copy-fade">You are cordially invited to</p>
+        <span class="hero-wedding-of hero-copy-fade">The Wedding of</span>
+        <h1 class="hero-names script">
+          <span id="name-cynthia"></span>
+          <span class="hero-ampersand" id="name-ampersand"></span>
+          <span id="name-austin"></span>
+        </h1>
+        <p class="hero-date fancy hero-copy-fade">Saturday, February 27th, 2027</p>
+        <p class="hero-location caps hero-copy-fade">Santa Barbara, California</p>
+        <div class="hero-countdown hero-copy-fade" id="hero-countdown" aria-live="polite">
+          <div class="countdown-unit">
+            <span class="countdown-value" data-countdown-value="days">0</span>
+            <span class="countdown-label" data-countdown-label="days">Days</span>
+          </div>
+          <div class="countdown-unit">
+            <span class="countdown-value" data-countdown-value="hours">0</span>
+            <span class="countdown-label" data-countdown-label="hours">Hours</span>
+          </div>
+          <div class="countdown-unit">
+            <span class="countdown-value" data-countdown-value="minutes">0</span>
+            <span class="countdown-label" data-countdown-label="minutes">Minutes</span>
+          </div>
+          <div class="countdown-unit">
+            <span class="countdown-value" data-countdown-value="seconds">0</span>
+            <span class="countdown-label" data-countdown-label="seconds">Seconds</span>
+          </div>
+        </div>
+        <a href="#sec-rsvp" class="hero-cta hero-copy-fade" id="hero-rsvp-cta">RSVP</a>
       </div>
-      <div class="countdown-unit">
-        <span class="countdown-value" data-countdown-value="hours">0</span>
-        <span class="countdown-label" data-countdown-label="hours">Hours</span>
-      </div>
-      <div class="countdown-unit">
-        <span class="countdown-value" data-countdown-value="minutes">0</span>
-        <span class="countdown-label" data-countdown-label="minutes">Minutes</span>
-      </div>
-      <div class="countdown-unit">
-        <span class="countdown-value" data-countdown-value="seconds">0</span>
-        <span class="countdown-label" data-countdown-label="seconds">Seconds</span>
+
+      <div class="scroll-hint">
+        <span>Scroll to continue</span>
+        <div class="scroll-chevrons">
+          <i></i><i></i><i></i>
+        </div>
       </div>
     </div>
-    <a href="#sec-rsvp" class="hero-cta hero-copy-fade" id="hero-rsvp-cta">RSVP</a>
-  </div>
 
-  <div class="scroll-hint">
-    <span>Scroll to continue</span>
-    <div class="scroll-chevrons">
-      <i></i><i></i><i></i>
-    </div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════
      OUR STORY
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory-dark">
+<div class="section-bg-ivory-dark hero-story-real">
   <div class="section" id="sec-ourstory">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -3023,7 +3068,7 @@ buildLetterSpans('name-austin', 'Austin');
     // position is intentional, and the scroll listener re-wakes the loop).
     const settling = !urlBarSettling && scrollY !== targetScrollY;
     lastScrollY = scrollY;
-    // Shared so the bloom canvas paints from the same scrollY in the same frame.
+    // Shared so atmosphere effects can paint from the same scrollY in the same frame.
     window.__heroScrollY = scrollY;
     scrollDirty = false;
 
@@ -3084,10 +3129,6 @@ buildLetterSpans('name-austin', 'Austin');
       const contentY = px((HERO_CONTENT.entranceY * te) + (scrollY * HERO_CONTENT.scrollMult));
       HERO_CONTENT.el.style.transform = `translate3d(0, ${contentY}px, 0)`;
     }
-
-    // Push the bloom canvas in the same frame, off the same scrollY, so its
-    // translateY never lags or leads the layers it sits in front of.
-    if (typeof window.updateBloomScroll === 'function') window.updateBloomScroll();
 
     raf = (entranceDone && !settling && recoveryFramesLeft <= 0) ? null : requestAnimationFrame(tick);
   }
@@ -3175,7 +3216,6 @@ buildLetterSpans('name-austin', 'Austin');
     const obs = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
         resume();
-        window.updateBloomScroll?.();
       } else {
         pause();
       }
@@ -3189,6 +3229,94 @@ buildLetterSpans('name-austin', 'Austin');
 })();
 
 window.prepareHeroParallaxInitialState?.();
+
+// ─────────────────────────────────────
+// PINNED HERO → OUR STORY TRANSITION
+// The hero wrapper is a short sticky stage. While it holds the viewport, this
+// scrubber scales the garden and fades the hero into the real Our Story section
+// that follows immediately in normal document flow.
+// ─────────────────────────────────────
+(function initHeroExit() {
+  const docEl = document.documentElement;
+  let wrapper = null, sticky = null, hero = null, scene = null, content = null, hint = null, storySection = null;
+  let enabled = null;   // null = not yet decidable (hero not revealed)
+  let scrollDistance = 1, lastApplied = -1;
+  let raf = null;
+  let scaleAmp = 0.24, spreadPx = 78;
+
+  function clamp01(v) {
+    return Math.min(1, Math.max(0, v));
+  }
+
+  function smoothstep(edge0, edge1, value) {
+    const t = clamp01((value - edge0) / (edge1 - edge0));
+    return t * t * (3 - 2 * t);
+  }
+
+  function measure() {
+    scrollDistance = Math.max(
+      1,
+      wrapper.offsetHeight - (sticky.offsetHeight || window.innerHeight || 1)
+    );
+  }
+
+  // Decided lazily on the first scroll after the hero is revealed, because the
+  // hero-degraded class is only set when the parallax initializes.
+  function decideEnabled() {
+    wrapper = document.getElementById('hero-story-transition');
+    sticky = wrapper?.querySelector('.hero-story-sticky');
+    hero = document.getElementById('hero');
+    if (!wrapper || !sticky || !hero || !hero.classList.contains('visible')) return null;
+    scene = hero.querySelector('.hero-parallax');
+    content = document.getElementById('pl-hero-content');
+    hint = hero.querySelector('.scroll-hint');
+    storySection = document.getElementById('sec-ourstory');
+    if (!scene || !content) return false;
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      scaleAmp = docEl.classList.contains('hero-degraded') ? 0.08 : 0.12;
+      spreadPx = docEl.classList.contains('hero-degraded') ? 18 : 34;
+    }
+    measure();
+    window.addEventListener('resize', () => {
+      measure();
+      schedule();
+    }, { passive: true });
+    docEl.classList.add('hero-exit-on');
+    storySection?.classList.add('in-view');
+    return true;
+  }
+
+  function apply(p) {
+    const pe = 1 - Math.pow(1 - p, 3); // front-loaded push while the hero fills the viewport
+    const contentOpacity = 1 - smoothstep(0.02, 0.42, p);
+    const heroOpacity = 1 - smoothstep(0.45, 0.96, p);
+
+    scene.style.transform = pe > 0.0001 ? `scale(${(1 + scaleAmp * pe).toFixed(4)})` : '';
+    hero.style.setProperty('--arch-exit-x', `${(spreadPx * pe).toFixed(2)}px`);
+    content.style.opacity = contentOpacity.toFixed(3);
+    if (hint) hint.style.opacity = contentOpacity.toFixed(3);
+    sticky.style.opacity = heroOpacity.toFixed(3);
+  }
+
+  function frame() {
+    raf = null;
+    const top = wrapper.getBoundingClientRect().top;
+    const p = clamp01(-top / scrollDistance);
+    if (Math.abs(p - lastApplied) > 0.001) {
+      apply(p);
+      lastApplied = p;
+    }
+  }
+
+  function schedule() {
+    if (enabled === null) enabled = decideEnabled();
+    if (enabled && !raf) raf = requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('scroll', () => {
+    schedule();
+  }, { passive: true });
+})();
 
 // ─────────────────────────────────────
 // ENVELOPE OPEN
@@ -3266,8 +3394,8 @@ function openEnvelope() {
   const FLAP_START = 650;               // flap folds while the seal is still falling
   const PAST_FOLD = FLAP_START + 550;   // flapFold crosses -90° at its 38% keyframe
   const LETTER_OUT = FLAP_START + 700;  // letter emerges behind the folded-back flap
-  const MATCH_CUT = LETTER_OUT + 1080;  // letter slide (1.05s) has settled
-  const REVEAL_DELAY = 800;             // just before letterZoom's paper fade begins (55% of 1.6s)
+  const MATCH_CUT = LETTER_OUT + 1160;  // start the zoom just before the slower pull fully settles
+  const REVEAL_DELAY = 520;             // hero begins as the gentler letterZoom starts fading
 
   // 1. The wax seal cracks off and falls; the tap hint fades.
   screen.classList.add('opening');
@@ -3313,12 +3441,12 @@ function openEnvelope() {
         envWrap.style.transition = 'opacity 0.3s ease';
         envWrap.style.opacity = '0';
         hero.classList.add('visible');
+        document.documentElement.classList.add('invitation-opened');
         initHeroParallax();
         startGoldenMotes();
         revealLetters('name-cynthia', 250);
         revealLetters('name-ampersand', 650);
         revealLetters('name-austin', 820);
-        setTimeout(() => { startRoseBlooms(); }, 1900);
         setTimeout(() => { twin.remove(); flash.remove(); stopEnvelopeMotes(); }, 1700);
       }, Math.max(0, coverAt - performance.now()));
     });
@@ -3590,185 +3718,6 @@ function startRsvpMotes() {
 }
 
 // ─────────────────────────────────────
-// ROSE BLOOM SPRITE ANIMATION
-// ─────────────────────────────────────
-function startRoseBlooms() {
-  const canvas = document.getElementById('bloomCanvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, blooms = [], raf;
-
-  const sheet = new Image();
-  sheet.src = 'img/rose-blooming-1.png';
-
-  // Sprite-sheet layout: 6 columns x 2 rows.
-  const COLS = 6;
-  const ROWS = 2;
-  const TOTAL_FRAMES = COLS * ROWS;
-  const FPS = 9;
-  function resize() {
-    W = canvas.width = canvas.offsetWidth;
-    H = canvas.height = canvas.offsetHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  // Driven synchronously from the parallax tick so we never paint a stale
-  // scrollY in a frame where the parallax has already advanced. Falls back to
-  // window.scrollY in the unlikely case the bloom inits before the parallax.
-  function updateScroll() {
-    const scrollY = typeof window.__heroScrollY === 'number'
-      ? window.__heroScrollY
-      : Math.min(window.scrollY || 0, 180);
-    const bloomMult = window.innerWidth <= 768 ? -0.5 : -0.75;
-    canvas.style.transform = `translateY(${scrollY * bloomMult}px) translateZ(0)`;
-  }
-  window.updateBloomScroll = updateScroll;
-  updateScroll();
-
-  // Blooms spawn along the bottom 10% band only.
-  function makeBloom() {
-    if (!sheet.complete || !sheet.naturalWidth) return null;
-    const frameW = sheet.naturalWidth / COLS;
-    const frameH = sheet.naturalHeight / ROWS;
-    const overlapPad = 8;
-    const maxAttempts = 50;
-
-    function intersects(candidate) {
-      return blooms.some((b) => {
-        const leftA   = candidate.x - candidate.drawW / 2 - overlapPad;
-        const rightA  = candidate.x + candidate.drawW / 2 + overlapPad;
-        const topA    = candidate.y - candidate.drawH / 2 - overlapPad;
-        const bottomA = candidate.y + candidate.drawH / 2 + overlapPad;
-        const leftB   = b.x - b.drawW / 2 - overlapPad;
-        const rightB  = b.x + b.drawW / 2 + overlapPad;
-        const topB    = b.y - b.drawH / 2 - overlapPad;
-        const bottomB = b.y + b.drawH / 2 + overlapPad;
-        return leftA < rightB && rightA > leftB && topA < bottomB && bottomA > topB;
-      });
-    }
-
-    // Gap-seeking x: aim each new bloom at the centre of the widest empty
-    // horizontal stretch (with jitter), instead of uniform random x — pure
-    // random sampling leaves large bare runs on wide screens, where a dozen
-    // blooms scatter across 2500+px.
-    function pickGapX(xMin, xMax) {
-      const points = [xMin, ...blooms.map((b) => b.x).sort((a, b) => a - b), xMax];
-      let bestStart = xMin, bestEnd = xMax, bestSize = -1;
-      for (let i = 1; i < points.length; i++) {
-        const size = points[i] - points[i - 1];
-        if (size > bestSize) { bestSize = size; bestStart = points[i - 1]; bestEnd = points[i]; }
-      }
-      const x = (bestStart + bestEnd) / 2 + (Math.random() - 0.5) * bestSize * 0.4;
-      return Math.max(xMin, Math.min(xMax, x));
-    }
-
-    for (let i = 0; i < maxAttempts; i++) {
-      const scale = (0.55 + Math.random() * 0.35) * 0.5;
-      const drawW = frameW * scale;
-      const drawH = frameH * scale;
-      const halfW = drawW / 2;
-      const halfH = drawH / 2;
-
-      let xMin = halfW, xMax = W - halfW;
-      let yMin = Math.max(halfH, H * 0.9), yMax = H - halfH;
-
-      if (xMin > xMax || yMin > yMax) continue;
-
-      const candidate = {
-        x: pickGapX(xMin, xMax),
-        y: yMin + Math.random() * (yMax - yMin),
-        drawW, drawH, scale,
-        startMs: 0,
-        frameOffset: Math.floor(Math.random() * 5),
-        finished: false,
-        rotation: (Math.random() * 10 - 5) * Math.PI / 180,
-        mirrorX: blooms.length % 2 === 1,
-      };
-
-      if (!intersects(candidate)) return candidate;
-    }
-    return null;
-  }
-
-  // Seed a few blooms before the loop starts (sheet may not be loaded yet;
-  // makeBloom guards against that and returns null safely).
-  sheet.onload = () => {
-    for (let i = 0; i < 6; i++) {
-      const b = makeBloom();
-      if (b) blooms.push(b);
-    }
-  };
-
-  function drawBloom(b) {
-    const frameW = sheet.naturalWidth / COLS;
-    const frameH = sheet.naturalHeight / ROWS;
-    const elapsed = performance.now() - b.startMs;
-    let frame = Math.min(
-      TOTAL_FRAMES - 1,
-      Math.floor((elapsed / 1000) * FPS) + b.frameOffset
-    );
-    if (frame >= TOTAL_FRAMES - 1) { frame = TOTAL_FRAMES - 1; b.finished = true; }
-    const sx = (frame % COLS) * frameW;
-    const sy = Math.floor(frame / COLS) * frameH;
-    ctx.save();
-    ctx.translate(b.x, b.y);
-    ctx.rotate(b.rotation);
-    if (b.mirrorX) ctx.scale(-1, 1);
-    ctx.drawImage(sheet, sx, sy, frameW, frameH, -b.drawW / 2, -b.drawH / 2, b.drawW, b.drawH);
-    ctx.restore();
-  }
-
-  let lastSpawn = 0;
-  let spawnFailures = 0;
-  let isRunning = false;
-
-  // Bloom population scales with canvas width (the old fixed 3s spawn window
-  // maxed out around 14 blooms — sparse enough to leave big bare stretches on
-  // wide monitors). Recomputed live so a resize can grow the garden.
-  const targetBloomCount = () => Math.max(10, Math.min(26, Math.round(W / 100)));
-
-  function animate(ts) {
-    ctx.clearRect(0, 0, W, H);
-
-    // Keep planting until the width-scaled target is reached, or the band
-    // is effectively full (repeated placement failures).
-    if (spawnFailures < 20 && ts - lastSpawn > 300 && blooms.length < targetBloomCount()) {
-      const b = makeBloom();
-      if (b) { blooms.push(b); lastSpawn = ts; spawnFailures = 0; }
-      else if (sheet.complete && sheet.naturalWidth) { spawnFailures++; lastSpawn = ts; }
-    }
-
-    if (sheet.complete && sheet.naturalWidth) {
-      blooms.forEach((b) => {
-        if (!b.startMs) b.startMs = performance.now();
-        drawBloom(b);
-      });
-    }
-
-    raf = requestAnimationFrame(animate);
-  }
-
-  function startLoop() {
-    if (isRunning) return;
-    isRunning = true;
-    raf = requestAnimationFrame(animate);
-  }
-  function stopLoop() {
-    if (!isRunning) return;
-    isRunning = false;
-    cancelAnimationFrame(raf);
-  }
-  startLoop();
-
-  const heroEl = document.getElementById('hero');
-  const obs = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting) startLoop();
-    else stopLoop();
-  }, { threshold: 0 });
-  obs.observe(heroEl);
-}
-
-// ─────────────────────────────────────
 // MAP TAB SWITCHER
 // ─────────────────────────────────────
 function switchMapTab(tab, btn) {
@@ -3946,6 +3895,7 @@ function skipEnvelopeInstantly() {
   });
   if (screen) { screen.style.transition = 'none'; screen.style.opacity = '0'; screen.style.visibility = 'hidden'; screen.style.pointerEvents = 'none'; }
   if (hero)   { hero.style.transition = 'none'; hero.classList.add('visible'); }
+  document.documentElement.classList.add('invitation-opened');
 
   flapFront && flapFront.classList.add('open');
   flapBack  && flapBack.classList.add('open');
@@ -3958,7 +3908,6 @@ function skipEnvelopeInstantly() {
   revealLetters('name-cynthia', 0);
   revealLetters('name-ampersand', 0);
   revealLetters('name-austin', 0);
-  startRoseBlooms();
 }
 
 if (returningFromHotels || resumingOpenedInvitation) {
