@@ -64,6 +64,20 @@
 
   <!-- Page-specific styles -->
   <style>
+    /* Keep the document pinned behind the initial fixed overlay. A fixed
+       element does not stop its underlying page from scrolling, especially
+       with touch/trackpad input. The class is already applied in <head> when
+       an opened invitation is being resumed, so those visits remain
+       scrollable and can restore their previous position. */
+    html:not(.invitation-opened),
+    html:not(.invitation-opened) body {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    html:not(.invitation-opened) #envelope-screen {
+      touch-action: none;
+    }
+
     /* ══════════════════════════════════════
       ENVELOPE SCREEN
     ══════════════════════════════════════ */
@@ -3483,6 +3497,14 @@ function rememberEnvelopeOpened() {
   } catch (_) {}
 }
 
+function scrollToHeroInstantly() {
+  const root = document.documentElement;
+  const previousScrollBehavior = root.style.scrollBehavior;
+  root.style.scrollBehavior = 'auto';
+  window.scrollTo(0, 0);
+  root.style.scrollBehavior = previousScrollBehavior;
+}
+
 // Builds an HTML copy of the SVG letter, positioned exactly over it, for the
 // match cut. A composited div transform is used for the zoom instead of
 // scaling the SVG group because HTML transforms rasterize predictably on
@@ -3531,6 +3553,10 @@ function buildLetterTwin() {
 function openEnvelope() {
   if (envelopeOpened) return;
   envelopeOpened = true;
+  // A restored hash/scroll position can exist before the load/pageshow reset.
+  // Pin the viewport now and again when the scroll lock is released so the
+  // opening always lands on the hero rather than a later section.
+  scrollToHeroInstantly();
   rememberEnvelopeOpened();
   primeBackgroundMusicFromEnvelopeTap();
   clearTimeout(heroWarmupTimer);
@@ -3597,7 +3623,9 @@ function openEnvelope() {
         envWrap.style.transition = 'opacity 0.3s ease';
         envWrap.style.opacity = '0';
         hero.classList.add('visible');
+        scrollToHeroInstantly();
         document.documentElement.classList.add('invitation-opened');
+        scrollToHeroInstantly();
         initHeroParallax();
         startGoldenMotes();
         revealLetters('name-cynthia', 250);
