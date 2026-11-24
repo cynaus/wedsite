@@ -826,6 +826,44 @@
       .hero-cta { font-size: 0.9rem; padding: 0.9rem 2.4rem; margin-top: 1.25rem; letter-spacing: 0.28em; }
     }
 
+    @media (min-width: 769px) and (pointer: fine) {
+      body { --hero-h: 100svh; }
+
+      #hero {
+        display: grid;
+        /* Keep the invitation centered when there is room, and reserve the
+           hint's full height in the bottom row on shorter screens. */
+        grid-template: minmax(0, 1fr) auto minmax(max-content, 1fr) / minmax(0, 1fr);
+        justify-items: center;
+      }
+      .hero-content { grid-row: 2; }
+      .scroll-hint {
+        grid-row: 3;
+        position: relative;
+        bottom: auto;
+        align-self: end;
+        margin: 0.75rem 0 2.5rem;
+        pointer-events: none;
+      }
+
+      @media (max-height: 60em) {
+        .hero-content { padding-block: 1.25rem; }
+        .hero-names { font-size: clamp(3rem, min(12vw, 12svh), 7rem); }
+        .hero-ampersand { font-size: clamp(2.5rem, min(10vw, 9svh), 5.5rem); }
+        .hero-countdown { margin-top: 0.75rem; }
+        .hero-cta { margin-top: 1rem; }
+        .scroll-hint { margin-bottom: 1rem; }
+      }
+
+      @media (max-height: 48em) {
+        /* Let the page scroll through the full invitation on very short screens. */
+        #hero-story-transition, .hero-story-sticky { height: auto; }
+        .hero-story-sticky, .hero-story-sticky #hero { position: relative; }
+        .hero-story-sticky #hero { height: auto; min-height: var(--hero-h); }
+        .hero-story-real { margin-top: 0; }
+      }
+    }
+
     /* ── OUR STORY ─────────────────────────────────────── */
     .ourstory-layout {
       display: grid;
@@ -3605,7 +3643,7 @@ window.prepareHeroParallaxInitialState?.();
   const docEl = document.documentElement;
   let wrapper = null, sticky = null, hero = null, scene = null, content = null, hint = null, storySection = null;
   let enabled = null;   // null = not yet decidable (hero not revealed)
-  let scrollDistance = 1, lastApplied = -1;
+  let scrollDistance = 0, lastApplied = -1;
   let raf = null;
   let scaleAmp = 0.24, spreadPx = 78;
 
@@ -3620,9 +3658,10 @@ window.prepareHeroParallaxInitialState?.();
 
   function measure() {
     scrollDistance = Math.max(
-      1,
+      0,
       wrapper.offsetHeight - (sticky.offsetHeight || window.innerHeight || 1)
     );
+    docEl.classList.toggle('hero-exit-on', scrollDistance > 0);
   }
 
   // Decided lazily on the first scroll after the hero is revealed, because the
@@ -3646,7 +3685,6 @@ window.prepareHeroParallaxInitialState?.();
       measure();
       schedule();
     }, { passive: true });
-    docEl.classList.add('hero-exit-on');
     storySection?.classList.add('in-view');
     return true;
   }
@@ -3665,8 +3703,7 @@ window.prepareHeroParallaxInitialState?.();
 
   function frame() {
     raf = null;
-    const top = wrapper.getBoundingClientRect().top;
-    const p = clamp01(-top / scrollDistance);
+    const p = scrollDistance > 0 ? clamp01(-wrapper.getBoundingClientRect().top / scrollDistance) : 0;
     if (Math.abs(p - lastApplied) > 0.001) {
       apply(p);
       lastApplied = p;
