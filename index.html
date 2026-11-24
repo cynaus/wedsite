@@ -1346,6 +1346,9 @@
       color: var(--text-mid);
       font-style: italic;
     }
+    .section-bg-ivory-dark .rules-item {
+      background: var(--ivory);
+    }
     .rules-item strong {
       color: var(--text-dark);
       font-style: normal;
@@ -1973,9 +1976,28 @@
 </div>
 
 <!-- ═══════════════════════════════════
-     RULES
+     DRESS CODE
 ═══════════════════════════════════ -->
 <div class="section-bg-ivory">
+  <section class="section" id="sec-dress-code" aria-labelledby="dress-code-title">
+    <div class="section-sep" aria-hidden="true">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy" id="dress-code-title">Dress Code</h2>
+    <p class="section-sub">Formal attire required</p>
+    <p class="rules-text fancy" id="dress-code-examples">
+      A suit and tie, an evening gown, or an elegant jumpsuit would all be lovely choices.
+    </p>
+    <p class="rules-text fancy"><strong id="dress-code-restrictions">Please, no jeans or white dresses.</strong></p>
+  </section>
+</div>
+
+<!-- ═══════════════════════════════════
+     RULES
+═══════════════════════════════════ -->
+<div class="section-bg-ivory-dark">
   <div class="section" id="sec-rules">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -1989,7 +2011,6 @@
     </p>
     <ul class="rules-list">
       <li class="rules-item"><strong>Invitation Only.</strong> To help us plan appropriately, please attend only if your name is included on the invitation.</li>
-      <li class="rules-item"><strong>Formal Attire Required.</strong> We kindly ask all guests to dress in formal attire for the celebration.</li>
       <li class="rules-item"><strong>Silence phones during the ceremony.</strong> Please keep phones silenced so everyone can be fully present.</li>
       <li class="rules-item"><strong>No smoking or vaping.</strong> Smoking and vaping are not permitted anywhere on venue property.</li>
       <li class="rules-item"><strong>No ceremony photos.</strong> Please refrain from taking photos during the ceremony; our photographer will capture those moments for everyone.</li>
@@ -2000,7 +2021,7 @@
 <!-- ═══════════════════════════════════
      GIFTS
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory-dark">
+<div class="section-bg-ivory">
   <div class="section" id="sec-gifts">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -2143,6 +2164,7 @@
     <a role="menuitem" href="#sec-itinerary" data-jump="itinerary">Itinerary</a>
     <a role="menuitem" href="#sec-menu"      data-jump="menu">Dinner Menu</a>
     <a role="menuitem" href="#sec-accomm"    data-jump="accomm">Accommodations</a>
+    <a role="menuitem" href="#sec-dress-code" data-jump="dressCode">Dress Code</a>
     <a role="menuitem" href="#sec-rules"     data-jump="rules">Rules</a>
     <a role="menuitem" href="#sec-gifts"     data-jump="gifts">Gifts</a>
     <a role="menuitem" href="#sec-rsvp"      data-jump="rsvp">RSVP</a>
@@ -2314,6 +2336,7 @@ const I18N_INDEX = {
       venue: 'Venues',
       itinerary: 'Itinerary',
       menu: 'Dinner Menu',
+      dressCode: 'Dress Code',
       rules: 'Rules',
       gifts: 'Gifts',
       rsvp: 'RSVP',
@@ -2328,12 +2351,15 @@ const I18N_INDEX = {
     accommodationsSub: 'Where to rest your head',
     accommodationsText: 'We have curated a selection of nearby hotels to make your stay as comfortable and memorable as possible. From luxurious retreats to charming boutique options, there is something for every guest.',
     accommodationsCta: 'View Recommended Hotels',
+    dressCodeTitle: 'Dress Code',
+    dressCodeSub: 'Formal attire required',
+    dressCodeExamples: 'A suit and tie, an evening gown, or an elegant jumpsuit would all be lovely choices.',
+    dressCodeRestrictions: 'Please, no jeans or white dresses.',
     rulesTitle: 'Rules',
     rulesSub: 'A few kind requests',
     rulesText: 'To help us keep the day peaceful, safe, and focused on the ceremony, we kindly ask all guests to abide by the following requests.',
     rulesItems: [
       '<strong>Invitation Only.</strong> To help us plan appropriately, please attend only if your name is included on the invitation.',
-      '<strong>Formal Attire Required.</strong> We kindly ask all guests to dress in formal attire for the celebration.',
       '<strong>Silence phones during the ceremony.</strong> Please keep phones silenced so everyone can be fully present.',
       '<strong>No smoking or vaping.</strong> Smoking and vaping are not permitted anywhere on venue property.',
       '<strong>No ceremony photos.</strong> Please refrain from taking photos during the ceremony; our photographer will capture those moments for everyone.',
@@ -2429,6 +2455,7 @@ const I18N_INDEX = {
       venue: 'Lugares',
       itinerary: 'Itinerario',
       menu: 'Menú',
+      dressCode: 'Código de vestimenta',
       rules: 'Reglas',
       gifts: 'Regalos',
       rsvp: 'Confirmación',
@@ -2443,12 +2470,15 @@ const I18N_INDEX = {
     accommodationsSub: 'Dónde descansar',
     accommodationsText: 'Hemos seleccionado una lista de hoteles cercanos para que tu estancia sea lo más cómoda y memorable posible. Desde retiros de lujo hasta opciones boutique con encanto, hay algo para cada invitado.',
     accommodationsCta: 'Ver hoteles recomendados',
+    dressCodeTitle: 'Código de vestimenta',
+    dressCodeSub: 'Se requiere vestimenta formal',
+    dressCodeExamples: 'Un traje con corbata, un vestido de noche o un enterizo elegante son buenas opciones.',
+    dressCodeRestrictions: 'Por favor, no usen jeans ni vestidos blancos.',
     rulesTitle: 'Reglas',
     rulesSub: 'Algunas peticiones amables',
     rulesText: 'Para ayudarnos a mantener el día tranquilo, seguro y enfocado en la ceremonia, les pedimos amablemente a todos los invitados que respeten las siguientes peticiones.',
     rulesItems: [
       '<strong>Solo por invitación.</strong> Para ayudarnos a planificar adecuadamente, por favor asista solo si su nombre está incluido en la invitación.',
-      '<strong>Se requiere vestimenta formal.</strong> Les pedimos amablemente a todos los invitados que vistan de manera formal para la celebración.',
       '<strong>Silencien sus teléfonos durante la ceremonia.</strong> Por favor, mantengan sus teléfonos en silencio para que todos puedan estar plenamente presentes.',
       '<strong>No fumar ni vapear.</strong> No se permite fumar ni vapear en ninguna parte de la propiedad del lugar.',
       '<strong>No tomar fotos durante la ceremonia.</strong> Por favor, eviten tomar fotos durante la ceremonia; nuestro fotógrafo capturará esos momentos para todos.',
@@ -2579,6 +2609,11 @@ function applyIndexTranslations(lang) {
   setText('#sec-accomm .section-sub', copy.accommodationsSub);
   setText('#sec-accomm .accomm-text', copy.accommodationsText);
   setText('#sec-accomm .btn-primary', copy.accommodationsCta);
+
+  setText('#dress-code-title', copy.dressCodeTitle);
+  setText('#sec-dress-code .section-sub', copy.dressCodeSub);
+  setText('#dress-code-examples', copy.dressCodeExamples);
+  setText('#dress-code-restrictions', copy.dressCodeRestrictions);
 
   setText('#sec-rules .section-title', copy.rulesTitle);
   setText('#sec-rules .section-sub', copy.rulesSub);
