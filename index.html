@@ -1205,17 +1205,21 @@
       ITINERARY
     ══════════════════════════════════════ */
     #itinerary { background: var(--ivory); }
+    #sec-itinerary .section-title { color: var(--red-deep); }
 
     .timeline {
+      --timeline-gutter: 2.5rem;
+      --timeline-axis: 0.875rem;
       position: relative;
-      padding-left: 2.5rem;
+      padding-left: var(--timeline-gutter);
       max-width: 520px; margin: 0 auto;
     }
     .timeline::before {
       content: '';
-      position: absolute; left: 0.55rem; top: 0; bottom: 0;
+      position: absolute; left: var(--timeline-axis); top: 0; bottom: 0;
+      transform: translateX(-50%);
       width: 1px;
-      background: linear-gradient(to bottom, var(--red), rgba(255,61,65,0.15));
+      background: #b69a6c;
     }
 
     .tl-item {
@@ -1225,23 +1229,41 @@
     }
     .tl-item.in-view { opacity: 1; transform: none; }
 
-    .tl-dot {
-      position: absolute; left: -2.35rem; top: 0.15rem;
+    .tl-icon {
+      position: absolute; left: calc(var(--timeline-axis) - var(--timeline-gutter)); top: 0.625rem;
+      transform: translate(-50%, -50%);
       width: 22px; height: 22px;
+      display: grid;
+      place-items: center;
+      font-size: 0.72rem;
+      line-height: 1;
+      color: white;
       background: var(--red);
       border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.7rem; color: white;
       box-shadow: 0 0 0 4px rgba(255,61,65,0.15);
     }
 
+    .tl-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 0.55rem;
+      margin-bottom: 0.2rem;
+    }
     .tl-time {
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.8rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 0.2rem;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      line-height: 1.35;
+      color: var(--red-deep);
+      white-space: nowrap;
+    }
+    .tl-location {
+      color: #625e59;
+      font-size: 0.75rem;
+      line-height: 1.35;
+    }
+    @media (max-width: 480px) {
+      .tl-time { font-size: 0.875rem; letter-spacing: 0.04em; }
     }
     .tl-event {
       font-family: 'Alex Brush', cursive;
@@ -1857,47 +1879,62 @@
 
     <div class="timeline" id="timeline">
       <div class="tl-item">
-        <div class="tl-dot">🚪</div>
-        <p class="tl-time">3:00 PM</p>
+        <span class="tl-icon" aria-hidden="true">🚪</span>
+        <p class="tl-meta"><span class="tl-time">3:00 PM</span> <span class="tl-location">Trinity Episcopal Church</span></p>
         <p class="tl-event fancy">Doors Open</p>
-        <p class="tl-desc">Guests are welcomed and seated in the chapel.</p>
+        <p class="tl-desc">Chapel seating opens at 1500 State St.</p>
       </div>
       <div class="tl-item">
-        <div class="tl-dot">💍</div>
-        <p class="tl-time">3:30 PM</p>
+        <span class="tl-icon" aria-hidden="true">💍</span>
+        <p class="tl-meta"><span class="tl-time">3:30 PM</span></p>
         <p class="tl-event fancy">Wedding Ceremony</p>
         <p class="tl-desc">Exchange of vows inside the chapel.</p>
       </div>
 
       <div class="tl-item">
-        <div class="tl-dot">🍹</div>
-        <p class="tl-time">5:00 PM - 6:00 PM</p>
+        <span class="tl-icon" aria-hidden="true">➜</span>
+        <p class="tl-meta">
+          <span class="tl-time">4:00–5:00 PM</span>
+          <span class="tl-location">El Paseo Restaurant</span>
+        </p>
+        <p class="tl-event fancy">Head to the Reception</p>
+        <p class="tl-desc">Meet us at 813 Anacapa St. for cocktail hour.</p>
+      </div>
+      <div class="tl-item">
+        <span class="tl-icon" aria-hidden="true">🍹</span>
+        <p class="tl-meta"><span class="tl-time">5:00–6:00 PM</span></p>
         <p class="tl-event fancy">Cocktail Hour</p>
         <p class="tl-desc">Join us for drinks and mingling before dinner.</p>
       </div>
       <div class="tl-item">
-        <div class="tl-dot">🍽️</div>
-        <p class="tl-time">6:00 PM</p>
+        <span class="tl-icon" aria-hidden="true">🍽️</span>
+        <p class="tl-meta"><span class="tl-time">6:00 PM</span></p>
         <p class="tl-event fancy">Wedding Dinner</p>
-        <p class="tl-desc">A Mexican banquet held at El Paseo Restaurant.</p>
+        <p class="tl-desc">Enjoy a Mexican banquet.</p>
       </div>
       <div class="tl-item">
-        <div class="tl-dot">🥂</div>
-        <p class="tl-time">6:00 PM - 10:00 PM</p>
+        <span class="tl-icon" aria-hidden="true">🥂</span>
+        <p class="tl-meta"><span class="tl-time">6:00–10:00 PM</span></p>
         <p class="tl-event fancy">Open Bar</p>
         <p class="tl-desc">Alcoholic and non-alcoholic drinks are available.</p>
       </div>
       <div class="tl-item">
-        <div class="tl-dot">🎂</div>
-        <p class="tl-time">7:00 PM</p>
-        <p class="tl-event fancy">Cake Cutting & Dessert Table</p>
-        <p class="tl-desc">Speeches and the ceremonial cutting of the wedding cake.</p>
+        <span class="tl-icon" aria-hidden="true">🎤</span>
+        <p class="tl-meta"><span class="tl-time">7:00 PM</span></p>
+        <p class="tl-event fancy">Speeches</p>
+        <p class="tl-desc">A few words in celebration of the newlyweds.</p>
       </div>
       <div class="tl-item">
-        <div class="tl-dot">💃</div>
-        <p class="tl-time">7:30 PM - 10:00 PM</p>
+        <span class="tl-icon" aria-hidden="true">💃</span>
+        <p class="tl-meta"><span class="tl-time">7:30–10:00 PM</span></p>
         <p class="tl-event fancy">Dancing & Celebration</p>
         <p class="tl-desc">Take to the dance floor and dance the night away!</p>
+      </div>
+      <div class="tl-item">
+        <span class="tl-icon" aria-hidden="true">🎂</span>
+        <p class="tl-meta"><span class="tl-time">8:00 PM</span></p>
+        <p class="tl-event fancy">Cake Cutting & Dessert Table</p>
+        <p class="tl-desc">Join us as we cut the wedding cake, then enjoy dessert.</p>
       </div>
     </div>
   </div>
@@ -2376,15 +2413,17 @@ const I18N_INDEX = {
     parkingLink: 'Directions →',
     dayTitle: 'The Day',
     daySub: 'Our celebration itinerary',
-    timelineEvents: ['Doors Open', 'Wedding Ceremony', 'Cocktail Hour', 'Wedding Dinner', 'Open Bar', 'Cake Cutting & Dessert Table', 'Dancing & Celebration'],
+    timelineEvents: ['Doors Open', 'Wedding Ceremony', 'Head to the Reception', 'Cocktail Hour', 'Wedding Dinner', 'Open Bar', 'Speeches', 'Dancing & Celebration', 'Cake Cutting & Dessert Table'],
     timelineDescs: [
-      'Guests are welcomed and seated in the chapel.',
+      'Chapel seating opens at 1500 State St.',
       'Exchange of vows inside the chapel.',
+      'Meet us at 813 Anacapa St. for cocktail hour.',
       'Join us for drinks and mingling before dinner.',
-      'A Mexican banquet held at El Paseo Restaurant.',
+      'Enjoy a Mexican banquet.',
       'Alcoholic and non-alcoholic drinks are available.',
-      'Speeches and the ceremonial cutting of the wedding cake.',
+      'A few words in celebration of the newlyweds.',
       'Take to the dance floor and dance the night away!',
+      'Join us as we cut the wedding cake, then enjoy dessert.',
     ],
     menuTitle: 'Dinner Buffet Menu',
     menuSub: 'El Paseo Restaurant',
@@ -2495,15 +2534,17 @@ const I18N_INDEX = {
     parkingLink: 'Cómo llegar →',
     dayTitle: 'El día',
     daySub: 'Itinerario de la celebración',
-    timelineEvents: ['Apertura de puertas', 'Ceremonia de boda', 'Hora del cóctel', 'Cena de boda', 'Barra libre', 'Corte del pastel y mesa de postres', 'Baile y celebración'],
+    timelineEvents: ['Apertura de puertas', 'Ceremonia de boda', 'Traslado a la recepción', 'Hora del cóctel', 'Cena de boda', 'Barra libre', 'Discursos', 'Baile y celebración', 'Corte del pastel y mesa de postres'],
     timelineDescs: [
-      'Se da la bienvenida a los invitados y se les acomoda en la capilla.',
+      'La capilla abre sus puertas en 1500 State St.',
       'Intercambio de votos dentro de la capilla.',
+      'Nos vemos en 813 Anacapa St. para la hora del cóctel.',
       'Únete a nosotros para tomar una copa y convivir antes de la cena.',
-      'Banquete mexicano en el Restaurante El Paseo.',
+      'Disfruten de un banquete mexicano.',
       'Habrá bebidas alcohólicas y sin alcohol.',
-      'Discursos y corte ceremonial del pastel de boda.',
+      'Unas palabras para celebrar a los recién casados.',
       '¡Sal a la pista y baila toda la noche!',
+      'Acompáñennos al corte del pastel de boda y disfruten del postre.',
     ],
     menuTitle: 'Menú buffet de cena',
     menuSub: 'Restaurante El Paseo',
