@@ -355,6 +355,8 @@ html.invitation-opened .jump-menu,
   top: calc(100% + 0.5rem);
   right: 0;
   min-width: 12rem;
+  max-height: calc(100dvh - 4.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
   background: rgba(18, 2, 2, 0.92);
   border: 1px solid rgba(250,246,240,0.25);
   padding: 0.35rem 0;

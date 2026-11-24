@@ -1153,47 +1153,85 @@
       }
     }
 
-    /* parking links */
-    .parking-list {
-      margin-top: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
+    /* parking guidance */
+    .parking {
+      margin-top: 2rem;
     }
-    .parking-list .section-sub {
-      margin-bottom: 0.5rem;
+    .parking-title {
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      color: var(--red-deep);
+      opacity: 1;
     }
-    .parking-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
+    .parking-copy {
+      color: var(--text-mid);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      line-height: 1.45;
+    }
+    .parking-intro,
+    .parking-note {
+      max-width: 60ch;
+      margin-inline: auto;
+      text-align: center;
+    }
+    .parking-groups {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+    @media (min-width: 640px) {
+      .parking-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .parking-group {
+      padding: 1rem;
       border: 1px solid rgba(192,39,42,0.15);
-      background: var(--ivory);
+      background: var(--ivory-dark);
+    }
+    .parking-venue {
+      color: var(--red-deep);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 0.45rem;
+    }
+    .parking-list {
+      list-style: none;
+      margin-top: 0.75rem;
+    }
+    .parking-link {
+      display: block;
+      padding: 0.5rem 0;
+      border-top: 1px solid rgba(192,39,42,0.18);
+      text-decoration: none;
     }
     .parking-name {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.05rem;
-      font-style: italic;
-      color: var(--text-dark);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--red-deep);
+      text-decoration: underline;
+      text-underline-offset: 0.16em;
     }
     .parking-addr {
+      display: block;
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.65rem;
+      font-size: 0.875rem;
       color: var(--text-mid);
-      margin-top: 2px;
+      margin-top: 0.15rem;
     }
-    .parking-link {
-      font-family: 'Playfair Display SC', serif;
-      font-size: 0.8rem;
-      letter-spacing: 0.1em;
-      color: var(--red-dark);
-      text-decoration: none;
-      white-space: nowrap;
-      margin-left: 1rem;
-      flex-shrink: 0;
+    .parking-link:hover .parking-name { color: var(--red-dark); }
+    .parking-link:focus-visible {
+      outline: 2px solid var(--red-deep);
+      outline-offset: 3px;
     }
-    .parking-link:hover { text-decoration: underline; }
+    .parking-note {
+      margin-top: 1rem;
+      font-style: italic;
+    }
 
     #map-container {
       width: 100%;
@@ -1279,6 +1317,10 @@
       line-height: 1.6;
     }
 
+    #sec-zoom .section-sub {
+      line-height: 1.6;
+    }
+
     /* ══════════════════════════════════════
       DINNER MENU
     ══════════════════════════════════════ */
@@ -1290,10 +1332,6 @@
       background: var(--ivory);
       border: 1px solid rgba(192,39,42,0.12);
       padding: 1.15rem 1.2rem;
-    }
-    .section-bg-ivory .menu-block,
-    .section-bg-ivory .parking-item {
-      background: var(--ivory-dark);
     }
     .menu-block-title {
       font-family: 'Playfair Display SC', serif;
@@ -1367,9 +1405,6 @@
       line-height: 1.6;
       color: var(--text-mid);
       font-style: italic;
-    }
-    .section-bg-ivory-dark .rules-item {
-      background: var(--ivory);
     }
     .rules-item strong {
       color: var(--text-dark);
@@ -1837,30 +1872,67 @@
       <iframe title="Google Map of El Paseo Restaurant" data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4654.400933571741!2d-119.70137990620107!3d34.422736718076784!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80e914792568f3cb%3A0xf7fc42c2808e0523!2sEl%20Paseo%20Restaurant!5e0!3m2!1sen!2sus!4v1772444115865!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" referrerpolicy="no-referrer-when-downgrade" hidden></iframe>
     </div>
 
-    <div class="parking-list">
-      <p class="section-sub">Nearby Parking</p>
-      <div class="parking-item">
-        <div>
-          <div class="parking-name">Parking Lot #6 (Granada Garage)</div>
-          <div class="parking-addr">1221 Anacapa St, Santa Barbara, CA</div>
+    <section class="parking" aria-labelledby="parking-title">
+      <h3 class="section-sub parking-title" id="parking-title">Nearby Parking</h3>
+      <p class="parking-copy parking-intro" id="parking-intro">The ceremony and reception are located at separate venues in downtown Santa Barbara. We recommend driving or taking a rideshare between the two venues. Walking between the two takes about 15–20 minutes.</p>
+      <div class="parking-groups">
+        <div class="parking-group">
+          <h4 class="parking-venue" id="parking-ceremony-title">Ceremony – Trinity Episcopal Church</h4>
+          <p class="parking-copy" id="parking-ceremony-copy">Street parking is available in the surrounding neighborhood. Additional parking is available at:</p>
+          <ul class="parking-list">
+            <li>
+              <a class="parking-link" href="https://maps.app.goo.gl/mmrfs7J9JaGqy9gB9" target="_blank" rel="noopener">
+                <span class="parking-name">Lot 5 – Victoria Lot</span>
+                <span class="parking-addr">1220 Chapala Street</span>
+              </a>
+            </li>
+            <li>
+              <a class="parking-link" href="https://www.google.com/maps/place/City+of+Santa+Barbara+Downtown+Parking+Lot+%236+(Granada+Garage)/@34.424553,-119.7040369,709m/data=!3m2!1e3!4b1!4m6!3m5!1s0x80e9147d88032bdf:0xbbfeb1aaba39b79d!8m2!3d34.424553!4d-119.7040369!16s%2Fg%2F1tfpvky4" target="_blank" rel="noopener">
+                <span class="parking-name">Lot 6 – Granada Garage</span>
+                <span class="parking-addr">1221 Anacapa Street</span>
+              </a>
+            </li>
+          </ul>
         </div>
-        <a class="parking-link" href="https://www.google.com/maps/dir/?api=1&destination=City+of+Santa+Barbara+Downtown+Parking+Lot+%236+(Granada+Garage),Santa+Barbara,CA" target="_blank">Directions →</a>
-      </div>
-      <div class="parking-item">
-        <div>
-          <div class="parking-name">Parking Lot #5</div>
-          <div class="parking-addr">1230 Chapala St, Santa Barbara, CA</div>
+        <div class="parking-group">
+          <h4 class="parking-venue" id="parking-reception-title">Reception – El Paseo Restaurant</h4>
+          <p class="parking-copy" id="parking-reception-copy">We recommend these parking options, each a short walk from the reception venue:</p>
+          <ul class="parking-list">
+            <li>
+              <a class="parking-link" href="https://www.google.com/maps/place/Lobero+Garage/@34.4211669,-119.7008268,709m/data=!3m2!1e3!4b1!4m6!3m5!1s0x80e9147eb893a773:0x5bed30d0609683c5!8m2!3d34.4211669!4d-119.7008268!16s%2Fg%2F11f2gsl307" target="_blank" rel="noopener">
+                <span class="parking-name">Lot 9 – Lobero Garage</span>
+                <span class="parking-addr">921 Anacapa Street</span>
+              </a>
+            </li>
+            <li>
+              <a class="parking-link" href="https://maps.app.goo.gl/m72BiqQSVAoHAp8R9" target="_blank" rel="noopener">
+                <span class="parking-name">Lot 2 – Chapala Garage</span>
+                <span class="parking-addr">914 Chapala Street</span>
+              </a>
+            </li>
+            <li>
+              <a class="parking-link" href="https://www.google.com/maps/place/Ortega+Garage/@34.4191094,-119.6968145,709m/data=!3m2!1e3!4b1!4m6!3m5!1s0x80e9147887a83a51:0xbbeee6058d2a11d0!8m2!3d34.4191094!4d-119.6968145!16s%2Fg%2F11gd67kct8" target="_blank" rel="noopener">
+                <span class="parking-name">Lot 10 – Ortega Garage</span>
+                <span class="parking-addr">621 Anacapa Street</span>
+              </a>
+            </li>
+            <li>
+              <a class="parking-link" href="https://maps.app.goo.gl/9xhLY3ika5FMZ5eG9" target="_blank" rel="noopener">
+                <span class="parking-name">Lot 1 – Paseo Nuevo</span>
+                <span class="parking-addr">716 Chapala Street</span>
+              </a>
+            </li>
+            <li>
+              <a class="parking-link" href="https://www.google.com/maps/place/Public+Parking+Lot+8/@34.4229109,-119.7013456,709m/data=!3m2!1e3!4b1!4m6!3m5!1s0x80e9153598183b1f:0x89c0e3f26a29a394!8m2!3d34.4229109!4d-119.7013456!16s%2Fg%2F11ns2hn1mb" target="_blank" rel="noopener">
+                <span class="parking-name">Lot 8 – Bank Lot</span>
+                <span class="parking-addr">1015 Anacapa Street</span>
+              </a>
+            </li>
+          </ul>
         </div>
-        <a class="parking-link" href="https://www.google.com/maps/dir/?api=1&destination=Public+Parking+Lot+5,Santa+Barbara,CA" target="_blank">Directions →</a>
       </div>
-      <div class="parking-item">
-        <div>
-          <div class="parking-name">Parking Lot #7 (Library Garage)</div>
-          <div class="parking-addr">1115 Anacapa St, Santa Barbara, CA</div>
-        </div>
-        <a class="parking-link" href="https://www.google.com/maps/dir/?api=1&destination=City+of+Santa+Barbara+Downtown+Parking+Lot+%237+(Library+Garage),Santa+Barbara,CA" target="_blank">Directions →</a>
-      </div>
-    </div>
+      <p class="parking-copy parking-note" id="parking-note">Please allow a little extra time to find parking before the ceremony.</p>
+    </section>
   </div>
 </div>
 
@@ -1940,10 +2012,30 @@
   </div>
 </div>
 
+<!-- WATCH THE CEREMONY -->
+<div class="section-bg-ivory">
+  <section class="section" id="sec-zoom" aria-labelledby="zoom-title">
+    <div class="section-sep" aria-hidden="true">
+      <div class="sep-line"></div>
+      <div class="sep-img"></div>
+      <div class="sep-line"></div>
+    </div>
+    <h2 class="section-title fancy" id="zoom-title">Watch the Ceremony</h2>
+    <p class="section-sub">
+      <time id="zoom-time" datetime="2027-02-27T15:00:00-08:00">Saturday, February 27, 2027 · Zoom opens at 3:00 p.m. Pacific Time</time>
+    </p>
+    <p class="rules-text fancy" id="zoom-text">
+      If you’re celebrating with us from afar, we’d love for you to join us live on Zoom for our wedding ceremony.
+      The livestream will end after the ceremony, before the reception.
+    </p>
+    <p class="rules-text fancy"><strong id="zoom-link-note">We’ll share the Zoom link closer to the wedding.</strong></p>
+  </section>
+</div>
+
 <!-- ═══════════════════════════════════
      DINNER MENU
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory">
+<div class="section-bg-ivory-dark">
   <div class="section" id="sec-menu">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -1995,7 +2087,7 @@
 <!-- ═══════════════════════════════════
      ACCOMMODATIONS
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory-dark">
+<div class="section-bg-ivory">
   <div class="section" id="sec-accomm">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -2015,7 +2107,7 @@
 <!-- ═══════════════════════════════════
      DRESS CODE
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory">
+<div class="section-bg-ivory-dark">
   <section class="section" id="sec-dress-code" aria-labelledby="dress-code-title">
     <div class="section-sep" aria-hidden="true">
       <div class="sep-line"></div>
@@ -2034,7 +2126,7 @@
 <!-- ═══════════════════════════════════
      RULES
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory-dark">
+<div class="section-bg-ivory">
   <div class="section" id="sec-rules">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -2058,7 +2150,7 @@
 <!-- ═══════════════════════════════════
      GIFTS
 ═══════════════════════════════════ -->
-<div class="section-bg-ivory">
+<div class="section-bg-ivory-dark">
   <div class="section" id="sec-gifts">
     <div class="section-sep">
       <div class="sep-line"></div>
@@ -2199,6 +2291,7 @@
     <a role="menuitem" href="#sec-ourstory"  data-jump="ourstory">Our Story</a>
     <a role="menuitem" href="#sec-venue"     data-jump="venue">Venues</a>
     <a role="menuitem" href="#sec-itinerary" data-jump="itinerary">Itinerary</a>
+    <a role="menuitem" href="#sec-zoom"      data-jump="zoom">Watch the Ceremony</a>
     <a role="menuitem" href="#sec-menu"      data-jump="menu">Dinner Menu</a>
     <a role="menuitem" href="#sec-accomm"    data-jump="accomm">Accommodations</a>
     <a role="menuitem" href="#sec-dress-code" data-jump="dressCode">Dress Code</a>
@@ -2372,6 +2465,7 @@ const I18N_INDEX = {
       accomm: 'Accommodations',
       venue: 'Venues',
       itinerary: 'Itinerary',
+      zoom: 'Watch the Ceremony',
       menu: 'Dinner Menu',
       dressCode: 'Dress Code',
       rules: 'Rules',
@@ -2408,9 +2502,14 @@ const I18N_INDEX = {
     mapTitle: 'Interactive Map',
     mapLoad: 'Load map',
     mapLoading: 'Loading map…',
-    parkingSub: 'Nearby Parking',
-    parkingNames: ['Parking Lot #6 (Granada Garage)', 'Parking Lot #5', 'Parking Lot #7 (Library Garage)'],
-    parkingLink: 'Directions →',
+    parkingTitle: 'Nearby Parking',
+    parkingIntro: 'The ceremony and reception are located at separate venues in downtown Santa Barbara. We recommend driving or taking a rideshare between the two venues. Walking between the two takes about 15–20 minutes.',
+    parkingCeremonyTitle: 'Ceremony – Trinity Episcopal Church',
+    parkingCeremonyCopy: 'Street parking is available in the surrounding neighborhood. Additional parking is available at:',
+    parkingReceptionTitle: 'Reception – El Paseo Restaurant',
+    parkingReceptionCopy: 'We recommend these parking options, each a short walk from the reception venue:',
+    parkingNames: ['Lot 5 – Victoria Lot', 'Lot 6 – Granada Garage', 'Lot 9 – Lobero Garage', 'Lot 2 – Chapala Garage', 'Lot 10 – Ortega Garage', 'Lot 1 – Paseo Nuevo', 'Lot 8 – Bank Lot'],
+    parkingNote: 'Please allow a little extra time to find parking before the ceremony.',
     dayTitle: 'The Day',
     daySub: 'Our celebration itinerary',
     timelineEvents: ['Doors Open', 'Wedding Ceremony', 'Head to the Reception', 'Cocktail Hour', 'Wedding Dinner', 'Open Bar', 'Speeches', 'Dancing & Celebration', 'Cake Cutting & Dessert Table'],
@@ -2425,6 +2524,10 @@ const I18N_INDEX = {
       'Take to the dance floor and dance the night away!',
       'Join us as we cut the wedding cake, then enjoy dessert.',
     ],
+    zoomTitle: 'Watch the Ceremony',
+    zoomTime: 'Saturday, February 27, 2027 · Zoom opens at 3:00 p.m. Pacific Time',
+    zoomText: 'If you’re celebrating with us from afar, we’d love for you to join us live on Zoom for our wedding ceremony. The livestream will end after the ceremony, before the reception.',
+    zoomLinkNote: 'We’ll share the Zoom link closer to the wedding.',
     menuTitle: 'Dinner Buffet Menu',
     menuSub: 'El Paseo Restaurant',
     menuBlocks: ['Appetizers', 'Salad', 'Entrees', 'Side Dishes'],
@@ -2493,6 +2596,7 @@ const I18N_INDEX = {
       accomm: 'Hospedaje',
       venue: 'Lugares',
       itinerary: 'Itinerario',
+      zoom: 'Ver la ceremonia',
       menu: 'Menú',
       dressCode: 'Código de vestimenta',
       rules: 'Reglas',
@@ -2529,9 +2633,14 @@ const I18N_INDEX = {
     mapTitle: 'Mapa interactivo',
     mapLoad: 'Cargar mapa',
     mapLoading: 'Cargando mapa…',
-    parkingSub: 'Estacionamiento cercano',
-    parkingNames: ['Estacionamiento #6 (Garaje Granada)', 'Estacionamiento #5', 'Estacionamiento #7 (Garaje Library)'],
-    parkingLink: 'Cómo llegar →',
+    parkingTitle: 'Estacionamiento cercano',
+    parkingIntro: 'La ceremonia y la recepción se celebrarán en lugares distintos en el centro de Santa Bárbara. Recomendamos ir en auto o usar un servicio de transporte por aplicación para trasladarse entre ambos lugares. El trayecto a pie toma unos 15–20 minutos.',
+    parkingCeremonyTitle: 'Ceremonia – Iglesia Episcopal Trinity',
+    parkingCeremonyCopy: 'Hay estacionamiento en las calles cercanas. También pueden estacionar en:',
+    parkingReceptionTitle: 'Recepción – Restaurante El Paseo',
+    parkingReceptionCopy: 'Recomendamos estas opciones de estacionamiento, todas a pocos minutos a pie del lugar de la recepción:',
+    parkingNames: ['Lote 5 – Estacionamiento Victoria', 'Lote 6 – Garaje Granada', 'Lote 9 – Garaje Lobero', 'Lote 2 – Garaje Chapala', 'Lote 10 – Garaje Ortega', 'Lote 1 – Paseo Nuevo', 'Lote 8 – Estacionamiento del Banco'],
+    parkingNote: 'Por favor, calculen un poco más de tiempo para encontrar estacionamiento antes de la ceremonia.',
     dayTitle: 'El día',
     daySub: 'Itinerario de la celebración',
     timelineEvents: ['Apertura de puertas', 'Ceremonia de boda', 'Traslado a la recepción', 'Hora del cóctel', 'Cena de boda', 'Barra libre', 'Discursos', 'Baile y celebración', 'Corte del pastel y mesa de postres'],
@@ -2546,6 +2655,10 @@ const I18N_INDEX = {
       '¡Sal a la pista y baila toda la noche!',
       'Acompáñennos al corte del pastel de boda y disfruten del postre.',
     ],
+    zoomTitle: 'Ver la ceremonia',
+    zoomTime: 'Sábado, 27 de febrero de 2027 · Zoom abre a las 3:00 p. m. (hora del Pacífico)',
+    zoomText: 'Si nos acompañan desde lejos, nos encantaría que vieran nuestra ceremonia de boda en vivo por Zoom. La transmisión terminará al concluir la ceremonia, antes de la recepción.',
+    zoomLinkNote: 'Compartiremos el enlace de Zoom cuando se acerque la boda.',
     menuTitle: 'Menú buffet de cena',
     menuSub: 'Restaurante El Paseo',
     menuBlocks: ['Entradas', 'Ensalada', 'Platos fuertes', 'Guarniciones'],
@@ -2674,11 +2787,15 @@ function applyIndexTranslations(lang) {
     if (title) title.textContent = copy.mapTitle;
     if (button && !button.disabled) button.textContent = copy.mapLoad;
   });
-  const parkingSub = document.querySelector('#sec-venue .parking-list .section-sub');
-  if (parkingSub) parkingSub.textContent = copy.parkingSub;
+  setText('#parking-title', copy.parkingTitle);
+  setText('#parking-intro', copy.parkingIntro);
+  setText('#parking-ceremony-title', copy.parkingCeremonyTitle);
+  setText('#parking-ceremony-copy', copy.parkingCeremonyCopy);
+  setText('#parking-reception-title', copy.parkingReceptionTitle);
+  setText('#parking-reception-copy', copy.parkingReceptionCopy);
   const parkingNames = document.querySelectorAll('#sec-venue .parking-name');
   parkingNames.forEach((el, i) => { if (copy.parkingNames[i]) el.textContent = copy.parkingNames[i]; });
-  document.querySelectorAll('#sec-venue .parking-link').forEach((el) => { el.textContent = copy.parkingLink; });
+  setText('#parking-note', copy.parkingNote);
 
   setText('#sec-itinerary .section-title', copy.dayTitle);
   setText('#sec-itinerary .section-sub', copy.daySub);
@@ -2686,6 +2803,11 @@ function applyIndexTranslations(lang) {
   timelineEvents.forEach((el, i) => { if (copy.timelineEvents[i]) el.textContent = copy.timelineEvents[i]; });
   const timelineDescs = document.querySelectorAll('#sec-itinerary .tl-desc');
   timelineDescs.forEach((el, i) => { if (copy.timelineDescs[i]) el.textContent = copy.timelineDescs[i]; });
+
+  setText('#zoom-title', copy.zoomTitle);
+  setText('#zoom-time', copy.zoomTime);
+  setText('#zoom-text', copy.zoomText);
+  setText('#zoom-link-note', copy.zoomLinkNote);
 
   setText('#sec-menu .section-title', copy.menuTitle);
   setText('#sec-menu .section-sub', copy.menuSub);
